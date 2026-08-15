@@ -1,0 +1,14 @@
+{
+  "name": "FinChord — Family Budgeting",
+  "short_name": "FinChord",
+  "description": "A calm, modern family budgeting app for parents and kids to track spending, budgets, cards, and savings goals together.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f8fa",
+  "theme_color": "#f7f8fa",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/apple-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

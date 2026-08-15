@@ -1,0 +1,68 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function member(householdId) {
+      return get(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid)).data;
+    }
+
+    function isMember(householdId) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid));
+    }
+
+    function isParent(householdId) {
+      return isMember(householdId) && member(householdId).role == 'parent';
+    }
+
+    match /households/{householdId} {
+      allow read: if isMember(householdId);
+      allow write: if isParent(householdId);
+
+      // Family roster — only parents manage roles/members (prevents self-promotion to parent)
+      match /members/{memberId} {
+        allow read: if isMember(householdId);
+        allow write: if isParent(householdId);
+      }
+
+      // Transaction categories — everyone views, only parents edit
+      match /categories/{categoryId} {
+        allow read: if isMember(householdId);
+        allow write: if isParent(householdId);
+      }
+
+      // Debts — everyone views, only parents edit
+      match /debts/{debtId} {
+        allow read: if isMember(householdId);
+        allow write: if isParent(householdId);
+      }
+
+      // Transactions — everyone views and logs their own; parents can edit/delete any
+      match /transactions/{txId} {
+        allow read: if isMember(householdId);
+        allow create: if isMember(householdId) &&
+          (request.resource.data.memberId == request.auth.uid || isParent(householdId));
+        allow update, delete: if isParent(householdId) ||
+          (isMember(householdId) && resource.data.memberId == request.auth.uid);
+      }
+
+      // Goals — everyone views, only parents edit
+      match /goals/{goalId} {
+        allow read: if isMember(householdId);
+        allow write: if isParent(householdId);
+      }
+
+      // Private net-worth section — parents only, full stop
+      match /savingsAccounts/{accountId} {
+        allow read, write: if isParent(householdId);
+      }
+      match /assets/{assetId} {
+        allow read, write: if isParent(householdId);
+      }
+      match /passiveIncome/{entryId} {
+        allow read, write: if isParent(householdId);
+      }
+    }
+  }
+}
