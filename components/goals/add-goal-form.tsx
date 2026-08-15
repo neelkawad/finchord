@@ -10,7 +10,8 @@ import { cn } from '@/lib/utils'
 import type { SavingsGoal, SavingsGoalGroup } from '@/lib/data'
 
 const groupOptions: { value: SavingsGoalGroup; label: string }[] = [
-  { value: 'savings', label: 'Savings & Investments' },
+  { value: 'savings', label: 'Savings' },
+  { value: 'investment', label: 'Investments' },
   { value: 'education', label: "Kids' Education" },
   { value: 'emergency', label: 'Emergency Fund' },
 ]
@@ -91,7 +92,7 @@ export function AddGoalForm({ goal }: { goal?: SavingsGoal }) {
 
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-foreground">Group</legend>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {groupOptions.map((opt) => {
             const active = group === opt.value
             return (

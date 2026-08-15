@@ -21,7 +21,7 @@ export function SavingsBreakdown({ month }: { month: string }) {
   return (
     <section aria-labelledby="savings-heading" className="flex h-full flex-col">
       <h2 id="savings-heading" className="mb-3 text-base font-semibold text-foreground">
-        Savings
+        Saved
       </h2>
       <div className="flex-1 overflow-hidden rounded-2xl border border-border bg-card">
         {savingsRows.length === 0 ? (

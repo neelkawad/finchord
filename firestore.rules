@@ -47,10 +47,9 @@ service cloud.firestore {
           (isMember(householdId) && resource.data.memberId == request.auth.uid);
       }
 
-      // Goals — everyone views, only parents edit
+      // Savings accounts — parents only (hidden from kids' nav and data)
       match /goals/{goalId} {
-        allow read: if isMember(householdId);
-        allow write: if isParent(householdId);
+        allow read, write: if isParent(householdId);
       }
 
       // Private net-worth section — parents only, full stop

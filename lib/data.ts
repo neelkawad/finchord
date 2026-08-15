@@ -33,6 +33,56 @@ export type TransactionType = 'expense' | 'income'
 
 export const incomeSources = ['Salary', 'Allowance', 'Bonus', 'Gift', 'Other']
 
+export const commonMerchants = [
+  'Chipotle',
+  'Panda Express',
+  'Hyderabadwala',
+  'Home Depot',
+  'Amazon',
+  'Keds',
+  'Kwality',
+  'Farm2Cook',
+  'Hanuman Temple',
+  'Costco',
+  'HEB',
+  'Hareli',
+  'India Bazaar',
+  'Desi District',
+  'Chaurasta',
+  'Golconda Express',
+  '7-Eleven',
+  'Simply South',
+  'Bharat Bhavan',
+  'Elysium',
+  'Twin Peaks',
+  'Target',
+  "Kohl's",
+  'Burlington',
+  'Ross',
+  'PetSmart',
+  'Cinemark',
+  'AMC',
+  "Chuy's",
+  'Thai',
+  'Hyderabad House',
+  "McDonald's",
+  'Burger King',
+  'Whataburger',
+  'Chick-fil-A',
+  'Starbucks',
+  'DesiBytes',
+  'K&B',
+  'Swadesi',
+  'Monks',
+  'Hello India',
+  'Foodistan',
+  'Shawarma',
+  'Bawarchi',
+  'Saravana Bhavan',
+  'Ulavacharu',
+  'MTK',
+]
+
 export interface Transaction {
   id: string
   type: TransactionType
@@ -45,7 +95,7 @@ export interface Transaction {
   source?: string
 }
 
-export type SavingsGoalGroup = 'savings' | 'education' | 'emergency'
+export type SavingsGoalGroup = 'savings' | 'investment' | 'education' | 'emergency'
 
 export interface SavingsGoal {
   id: string

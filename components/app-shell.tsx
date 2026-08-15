@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -9,19 +9,27 @@ import {
   CreditCard,
   Target,
   Landmark,
+  FileText,
+  MoreHorizontal,
   LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
 import { MemberAvatar } from '@/components/ui/member-avatar'
 
-const navItems = [
+const primaryNavItems = [
   { href: '/', label: 'Home', icon: LayoutDashboard, parentOnly: false },
   { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight, parentOnly: false },
   { href: '/debts', label: 'Debt', icon: CreditCard, parentOnly: false },
-  { href: '/goals', label: 'Savings', icon: Target, parentOnly: false },
+  { href: '/goals', label: 'Savings', icon: Target, parentOnly: true },
+]
+
+const moreNavItems = [
+  { href: '/reports', label: 'Reports', icon: FileText, parentOnly: true },
   { href: '/accounts', label: 'Retirement', icon: Landmark, parentOnly: true },
 ]
+
+const navItems = [...primaryNavItems, ...moreNavItems]
 
 function isActive(pathname: string, href: string) {
   if (href === '/') return pathname === '/'
@@ -52,6 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, member, loading, signOut } = useAuth()
+  const [moreOpen, setMoreOpen] = useState(false)
 
   const isLoginPage = pathname === '/login'
 
@@ -63,6 +72,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       router.replace('/')
     }
   }, [loading, user, isLoginPage, router])
+
+  useEffect(() => {
+    setMoreOpen(false)
+  }, [pathname])
 
   if (isLoginPage) {
     return <>{children}</>
@@ -77,6 +90,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const visibleNavItems = navItems.filter((item) => !item.parentOnly || member.role === 'parent')
+  const visiblePrimaryItems = primaryNavItems.filter((item) => !item.parentOnly || member.role === 'parent')
+  const visibleMoreItems = moreNavItems.filter((item) => !item.parentOnly || member.role === 'parent')
+  const moreActive = visibleMoreItems.some((item) => isActive(pathname, item.href))
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-7xl">
@@ -143,13 +159,46 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {children}
       </div>
 
+      {/* Mobile "More" sheet */}
+      {moreOpen && visibleMoreItems.length > 0 && (
+        <>
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => setMoreOpen(false)}
+            className="fixed inset-0 z-40 bg-black/20 md:hidden"
+          />
+          <div className="fixed inset-x-0 bottom-16 z-50 mx-auto w-full max-w-lg px-2 md:hidden">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+              {visibleMoreItems.map((item) => {
+                const active = isActive(pathname, item.href)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'flex items-center gap-3 border-b border-border px-4 py-3.5 text-sm font-medium transition-colors last:border-0',
+                      active ? 'text-primary' : 'text-foreground hover:bg-accent/50',
+                    )}
+                  >
+                    <item.icon className="size-[18px]" />
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Mobile bottom nav */}
       <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur md:hidden"
         aria-label="Primary"
       >
         <ul className="mx-auto flex max-w-lg items-stretch justify-between px-2">
-          {visibleNavItems.map((item) => {
+          {visiblePrimaryItems.map((item) => {
             const active = isActive(pathname, item.href)
             return (
               <li key={item.href} className="flex-1">
@@ -167,6 +216,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </li>
             )
           })}
+          {visibleMoreItems.length > 0 && (
+            <li className="flex-1">
+              <button
+                type="button"
+                aria-expanded={moreOpen}
+                onClick={() => setMoreOpen((v) => !v)}
+                className={cn(
+                  'flex w-full flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors',
+                  moreActive || moreOpen ? 'text-primary' : 'text-muted-foreground',
+                )}
+              >
+                <MoreHorizontal className={cn('size-5', (moreActive || moreOpen) && 'stroke-[2.4]')} />
+                More
+              </button>
+            </li>
+          )}
         </ul>
       </nav>
     </div>

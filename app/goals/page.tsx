@@ -3,12 +3,15 @@
 import Link from 'next/link'
 import { Plus, PiggyBank } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
+import { FloatingActionButton } from '@/components/ui/floating-action-button'
+import { RequireParent } from '@/components/require-parent'
 import { formatCurrency, type SavingsGoal, type SavingsGoalGroup } from '@/lib/data'
 import { useSavingsGoals } from '@/lib/firestore-hooks'
 import { useAuth } from '@/lib/auth-context'
 
 const groupMeta: { key: SavingsGoalGroup; title: string }[] = [
-  { key: 'savings', title: 'Savings & Investments' },
+  { key: 'savings', title: 'Savings' },
+  { key: 'investment', title: 'Investments' },
   { key: 'education', title: "Kids' Education" },
   { key: 'emergency', title: 'Emergency Fund' },
 ]
@@ -63,6 +66,7 @@ export default function GoalsPage() {
   const totalBalance = savingsGoals.reduce((sum, g) => sum + g.balance, 0)
 
   return (
+    <RequireParent>
     <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
         <PageHeader
@@ -76,7 +80,7 @@ export default function GoalsPage() {
             canEdit ? (
               <Link
                 href="/goals/add"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                className="hidden items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 sm:inline-flex"
               >
                 <Plus className="size-4" />
                 Add Savings
@@ -106,6 +110,8 @@ export default function GoalsPage() {
           })
         )}
       </div>
+      {canEdit && <FloatingActionButton href="/goals/add" label="Add savings" />}
     </main>
+    </RequireParent>
   )
 }

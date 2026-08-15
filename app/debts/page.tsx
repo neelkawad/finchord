@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Plus, Landmark } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
+import { FloatingActionButton } from '@/components/ui/floating-action-button'
 import { formatCurrency, type Debt, type DebtGroup } from '@/lib/data'
 import { useDebts } from '@/lib/firestore-hooks'
 import { useAuth } from '@/lib/auth-context'
@@ -73,7 +74,7 @@ export default function DebtsPage() {
             canEdit ? (
               <Link
                 href="/debts/add"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                className="hidden items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 sm:inline-flex"
               >
                 <Plus className="size-4" />
                 Add Debt
@@ -109,6 +110,7 @@ export default function DebtsPage() {
           })
         )}
       </div>
+      {canEdit && <FloatingActionButton href="/debts/add" label="Add debt" />}
     </main>
   )
 }

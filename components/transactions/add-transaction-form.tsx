@@ -6,7 +6,7 @@ import { Check, Trash2, ArrowDownCircle, ArrowUpCircle, Landmark } from 'lucide-
 import { addDoc, collection, doc, updateDoc, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { HOUSEHOLD_ID } from '@/lib/constants'
-import { formatCurrency, incomeSources, type Transaction, type TransactionType } from '@/lib/data'
+import { commonMerchants, formatCurrency, incomeSources, type Transaction, type TransactionType } from '@/lib/data'
 import { useCategories, useDebts } from '@/lib/firestore-hooks'
 import { useAuth } from '@/lib/auth-context'
 import { MemberAvatar } from '@/components/ui/member-avatar'
@@ -229,7 +229,7 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
         </>
       )}
 
-      {/* Date + merchant */}
+      {/* Date */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="date" className="text-sm font-medium text-foreground">
@@ -249,22 +249,45 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
             <p className="text-xs text-danger">Only dates in the current month are allowed.</p>
           )}
         </div>
-        {type === 'expense' && (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="merchant" className="text-sm font-medium text-foreground">
-              Merchant / note <span className="font-normal text-muted-foreground">(optional)</span>
-            </label>
-            <input
-              id="merchant"
-              type="text"
-              placeholder="e.g. Whole Foods"
-              value={merchant}
-              onChange={(e) => setMerchant(e.target.value)}
-              className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground/60 focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
-            />
-          </div>
-        )}
       </div>
+
+      {/* Merchant */}
+      {type === 'expense' && (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="merchant" className="text-sm font-medium text-foreground">
+            Merchant / note <span className="font-normal text-muted-foreground">(optional)</span>
+          </label>
+          <input
+            id="merchant"
+            type="text"
+            placeholder="e.g. Whole Foods"
+            value={merchant}
+            onChange={(e) => setMerchant(e.target.value)}
+            className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground/60 focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
+          />
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {commonMerchants.map((m) => {
+              const active = merchant === m
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setMerchant(active ? '' : m)}
+                  className={cn(
+                    'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                    active
+                      ? 'border-primary bg-primary/5 text-primary'
+                      : 'border-border bg-card text-muted-foreground hover:border-ring hover:text-foreground',
+                  )}
+                >
+                  {m}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Spent/received by */}
       {member && !isEditing && (

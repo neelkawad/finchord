@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Landmark, Building2, Trees, TrendingUp, Lock, HeartPulse, GraduationCap, PiggyBank, Plus } from 'lucide-react'
+import { Landmark, Building2, Trees, TrendingUp, HeartPulse, GraduationCap, PiggyBank, Plus } from 'lucide-react'
 import { formatCurrency, formatINR, type AccountType } from '@/lib/data'
 import { useSavingsAccounts, useAssets, usePassiveIncome } from '@/lib/firestore-hooks'
 
@@ -32,11 +32,6 @@ export function AccountsView() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-center gap-2 rounded-xl border border-border bg-accent/50 px-4 py-3 text-sm text-muted-foreground">
-        <Lock className="size-4 shrink-0" />
-        This page is only visible to parents.
-      </div>
-
       <section aria-labelledby="savings-heading">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
@@ -122,7 +117,14 @@ export function AccountsView() {
                         <Icon className="size-[18px]" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">{asset.name}</p>
+                        <p className="flex items-center gap-1.5 truncate text-sm font-medium text-foreground">
+                          {asset.name}
+                          {asset.location === 'India' && (
+                            <span className="shrink-0 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                              India
+                            </span>
+                          )}
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           {asset.type} · {asset.location}
                         </p>
