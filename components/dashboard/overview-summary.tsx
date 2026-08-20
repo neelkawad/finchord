@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, ArrowDownRight, PiggyBank, Wallet } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, PiggyBank, Wallet } from 'lucide-react'
 import { formatCurrency } from '@/lib/data'
 import { useTransactions, useCategories } from '@/lib/firestore-hooks'
 
@@ -18,6 +18,31 @@ const textClass: Record<Status, string> = {
   amber: 'text-warning',
   red: 'text-danger',
   neutral: 'text-foreground',
+}
+
+const meterFillClass: Record<Status, string> = {
+  green: 'bg-positive',
+  amber: 'bg-warning',
+  red: 'bg-danger',
+  neutral: 'bg-muted-foreground',
+}
+
+const meterTrackClass: Record<Status, string> = {
+  green: 'bg-positive-muted',
+  amber: 'bg-warning-muted',
+  red: 'bg-danger-muted',
+  neutral: 'bg-accent',
+}
+
+function Meter({ pct, status }: { pct: number; status: Status }) {
+  return (
+    <div className={`mt-2.5 h-1.5 w-full overflow-hidden rounded-full ${meterTrackClass[status]}`}>
+      <div
+        className={`h-full rounded-full ${meterFillClass[status]}`}
+        style={{ width: `${Math.min(Math.max(pct, 0), 100)}%` }}
+      />
+    </div>
+  )
 }
 
 export function OverviewSummary({ month }: { month: string }) {
@@ -40,21 +65,19 @@ export function OverviewSummary({ month }: { month: string }) {
 
   const spentRatio = totalIncome > 0 ? totalSpent / totalIncome : 0
   const spentStatus: Status =
-    overspend > 0 ? 'red' : totalIncome === 0 ? 'neutral' : spentRatio >= 0.5 ? 'red' : spentRatio >= 0.4 ? 'amber' : 'green'
+    totalIncome === 0 ? 'neutral' : spentRatio >= 0.5 ? 'red' : spentRatio >= 0.4 ? 'amber' : 'green'
 
   const savedRatio = totalIncome > 0 ? saved / totalIncome : 0
   const savedStatus: Status = 'neutral'
 
   const spentNote =
-    overspend > 0
-      ? `Exceeded income by ${formatCurrency(overspend, { compact: true })}`
-      : totalIncome === 0
-        ? 'This month'
-        : spentStatus === 'red'
-          ? `Over 50% of income (${Math.round(spentRatio * 100)}%)`
-          : spentStatus === 'amber'
-            ? `Approaching 50% of income (${Math.round(spentRatio * 100)}%)`
-            : `${Math.round(spentRatio * 100)}% of income`
+    totalIncome === 0
+      ? 'This month'
+      : spentStatus === 'red'
+        ? `Over 50% of income (${Math.round(spentRatio * 100)}%)`
+        : spentStatus === 'amber'
+          ? `Approaching 50% of income (${Math.round(spentRatio * 100)}%)`
+          : `${Math.round(spentRatio * 100)}% of income`
 
   const savedNote =
     totalIncome === 0
@@ -76,7 +99,7 @@ export function OverviewSummary({ month }: { month: string }) {
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">Income</span>
           <span className="flex size-8 items-center justify-center rounded-full bg-positive-muted text-positive">
-            <TrendingUp className="size-4" />
+            <ArrowDownLeft className="size-4" />
           </span>
         </div>
         <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
@@ -89,13 +112,14 @@ export function OverviewSummary({ month }: { month: string }) {
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">Spent</span>
           <span className={`flex size-8 items-center justify-center rounded-full ${iconClass[spentStatus]}`}>
-            <ArrowDownRight className="size-4" />
+            <ArrowUpRight className="size-4" />
           </span>
         </div>
         <p className={`mt-3 text-3xl font-semibold tracking-tight ${textClass[spentStatus]}`}>
           {formatCurrency(totalSpent, { compact: true })}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">{spentNote}</p>
+        {totalIncome > 0 && <Meter pct={spentRatio * 100} status={spentStatus} />}
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-5">
@@ -110,6 +134,7 @@ export function OverviewSummary({ month }: { month: string }) {
           {formatCurrency(Math.abs(saved), { compact: true })}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">{savedNote}</p>
+        {totalIncome > 0 && <Meter pct={savedRatio * 100} status="green" />}
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-5">

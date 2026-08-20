@@ -25,8 +25,8 @@ const primaryNavItems = [
 ]
 
 const moreNavItems = [
-  { href: '/reports', label: 'Reports', icon: FileText, parentOnly: true },
   { href: '/accounts', label: 'Retirement', icon: Landmark, parentOnly: true },
+  { href: '/reports', label: 'Reports', icon: FileText, parentOnly: true },
 ]
 
 const navItems = [...primaryNavItems, ...moreNavItems]

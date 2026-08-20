@@ -17,12 +17,18 @@ export function SavingsBreakdown({ month }: { month: string }) {
   const savingsRows = expenses
     .filter((t) => t.categoryId && savingsCategoryIds.has(t.categoryId))
     .sort((a, b) => (a.date < b.date ? 1 : -1))
+  const total = savingsRows.reduce((s, t) => s + t.amount, 0)
 
   return (
     <section aria-labelledby="savings-heading" className="flex h-full flex-col">
-      <h2 id="savings-heading" className="mb-3 text-base font-semibold text-foreground">
-        Saved
-      </h2>
+      <div className="mb-3 flex items-baseline justify-between">
+        <h2 id="savings-heading" className="text-base font-semibold text-foreground">
+          Saved
+        </h2>
+        <span className="text-sm font-medium text-muted-foreground">
+          {formatCurrency(total, { compact: true })}
+        </span>
+      </div>
       <div className="flex-1 overflow-hidden rounded-2xl border border-border bg-card">
         {savingsRows.length === 0 ? (
           <p className="p-6 text-center text-sm text-muted-foreground">Nothing saved yet.</p>

@@ -15,12 +15,20 @@ export function IncomeSources({ month }: { month: string }) {
   const rows = transactions
     .filter((t) => t.type === 'income' && t.date.slice(0, 7) === month)
     .sort((a, b) => (a.date < b.date ? 1 : -1))
+  const total = rows.reduce((s, t) => s + t.amount, 0)
 
   return (
     <section aria-labelledby="income-heading" className="flex h-full flex-col">
-      <h2 id="income-heading" className="mb-3 text-base font-semibold text-foreground">
-        Income sources
-      </h2>
+      <div className="mb-3 flex items-baseline justify-between">
+        <h2 id="income-heading" className="text-base font-semibold text-foreground">
+          Income sources
+        </h2>
+        {canSeeIncomeDetail && (
+          <span className="text-sm font-medium text-muted-foreground">
+            {formatCurrency(total, { compact: true })}
+          </span>
+        )}
+      </div>
       <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card">
         {!canSeeIncomeDetail ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">

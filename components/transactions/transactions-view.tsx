@@ -30,6 +30,7 @@ export function TransactionsView() {
   const { debts } = useDebts()
   const cards = debts.filter((d) => d.group === 'credit')
   const { transactions } = useTransactions()
+  const savingsCategoryIds = new Set(categories.filter((c) => c.isSavings).map((c) => c.id))
 
   const [member, setMember] = useState('all')
   const [category, setCategory] = useState('all')
@@ -69,8 +70,14 @@ export function TransactionsView() {
   }, [transactions, member, category, card, type, range, today])
 
   const totalIncome = filtered.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-  const totalExpense = filtered.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-  const net = totalIncome - totalExpense
+  const expenseTxns = filtered.filter((t) => t.type === 'expense')
+  const totalExpense = expenseTxns
+    .filter((t) => !savingsCategoryIds.has(t.categoryId ?? ''))
+    .reduce((s, t) => s + t.amount, 0)
+  const totalSavings = expenseTxns
+    .filter((t) => savingsCategoryIds.has(t.categoryId ?? ''))
+    .reduce((s, t) => s + t.amount, 0)
+  const net = totalIncome - totalExpense - totalSavings
 
   const activeFilters =
     (member !== 'all' ? 1 : 0) +
@@ -142,6 +149,11 @@ export function TransactionsView() {
           <span className="text-foreground">
             -{formatCurrency(totalExpense, { compact: true })}
           </span>
+          {totalSavings > 0 && (
+            <span className="text-positive">
+              +{formatCurrency(totalSavings, { compact: true })} saved
+            </span>
+          )}
           <span className="font-medium text-foreground">
             Net: <span className="tabular-nums">{net >= 0 ? '+' : ''}{formatCurrency(net, { compact: true })}</span>
           </span>
