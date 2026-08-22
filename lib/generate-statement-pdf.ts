@@ -35,7 +35,7 @@ export function generateStatementPdf(summary: MonthSummary, categories: Category
   autoTable(doc, {
     startY: 88,
     margin: { left: margin, right: margin },
-    head: [['Income', 'Spent', 'Saved', 'Balance']],
+    head: [['Income', 'Spent', 'Saved/Invested', 'Balance']],
     body: [
       [
         formatCurrency(summary.totalIncome),

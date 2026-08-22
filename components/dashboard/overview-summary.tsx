@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowDownLeft, ArrowUpRight, PiggyBank, Wallet } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, PiggyBank } from 'lucide-react'
 import { formatCurrency } from '@/lib/data'
 import { useTransactions, useCategories } from '@/lib/firestore-hooks'
 
@@ -61,8 +61,6 @@ export function OverviewSummary({ month }: { month: string }) {
     .reduce((s, t) => s + t.amount, 0)
   const saved = toSavings
 
-  const overspend = totalSpent + toSavings - totalIncome
-
   const spentRatio = totalIncome > 0 ? totalSpent / totalIncome : 0
   const spentStatus: Status =
     totalIncome === 0 ? 'neutral' : spentRatio >= 0.5 ? 'red' : spentRatio >= 0.4 ? 'amber' : 'green'
@@ -84,17 +82,8 @@ export function OverviewSummary({ month }: { month: string }) {
       ? 'Moved to savings/investment categories'
       : `${Math.round(savedRatio * 100)}% of income`
 
-  const balance = totalIncome - totalSpent - toSavings
-  const balanceStatus: Status = totalIncome === 0 ? 'neutral' : balance >= 0 ? 'green' : 'red'
-  const balanceNote =
-    totalIncome === 0
-      ? 'This month'
-      : balance >= 0
-        ? 'Uncommitted — may go toward debt payoff'
-        : "Covered by savings, credit, or last month's balance"
-
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div className="rounded-2xl border border-border bg-card p-5">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">Income</span>
@@ -124,7 +113,7 @@ export function OverviewSummary({ month }: { month: string }) {
 
       <div className="rounded-2xl border border-border bg-card p-5">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-muted-foreground">Saved</span>
+          <span className="text-sm font-medium text-muted-foreground">Saved/Invested</span>
           <span className={`flex size-8 items-center justify-center rounded-full ${iconClass[savedStatus]}`}>
             <PiggyBank className="size-4" />
           </span>
@@ -135,20 +124,6 @@ export function OverviewSummary({ month }: { month: string }) {
         </p>
         <p className="mt-1 text-sm text-muted-foreground">{savedNote}</p>
         {totalIncome > 0 && <Meter pct={savedRatio * 100} status="green" />}
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-muted-foreground">Balance</span>
-          <span className={`flex size-8 items-center justify-center rounded-full ${iconClass[balanceStatus]}`}>
-            <Wallet className="size-4" />
-          </span>
-        </div>
-        <p className={`mt-3 text-3xl font-semibold tracking-tight ${textClass[balanceStatus]}`}>
-          {balance >= 0 ? '' : '-'}
-          {formatCurrency(Math.abs(balance), { compact: true })}
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">{balanceNote}</p>
       </div>
     </div>
   )

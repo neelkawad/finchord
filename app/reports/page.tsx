@@ -15,7 +15,7 @@ type RowKey = 'totalIncome' | 'totalSpent' | 'toSavings' | 'balance'
 const compareRows: { key: RowKey; label: string; higherIsGood: boolean }[] = [
   { key: 'totalIncome', label: 'Income', higherIsGood: true },
   { key: 'totalSpent', label: 'Spent', higherIsGood: false },
-  { key: 'toSavings', label: 'Saved', higherIsGood: true },
+  { key: 'toSavings', label: 'Saved/Invested', higherIsGood: true },
   { key: 'balance', label: 'Balance', higherIsGood: true },
 ]
 

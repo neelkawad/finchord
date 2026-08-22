@@ -23,7 +23,7 @@ export function SavingsBreakdown({ month }: { month: string }) {
     <section aria-labelledby="savings-heading" className="flex h-full flex-col">
       <div className="mb-3 flex items-baseline justify-between">
         <h2 id="savings-heading" className="text-base font-semibold text-foreground">
-          Saved
+          Saved/Invested
         </h2>
         <span className="text-sm font-medium text-muted-foreground">
           {formatCurrency(total, { compact: true })}
