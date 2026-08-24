@@ -93,6 +93,7 @@ export interface Transaction {
   cardId?: string
   merchant?: string
   source?: string
+  isFixed?: boolean
 }
 
 export type SavingsGoalGroup = 'savings' | 'investment' | 'education' | 'emergency'

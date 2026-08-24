@@ -10,25 +10,33 @@ export function BudgetCategories({ month }: { month: string }) {
   const { categories } = useCategories()
   const { transactions } = useTransactions()
 
+  const savingsCategoryIds = new Set(categories.filter((c) => c.isSavings).map((c) => c.id))
+
   const spentByCategory: Record<string, number> = {}
+  const fixedByCategory: Record<string, number> = {}
   for (const t of transactions) {
     if (t.type !== 'expense' || !t.categoryId) continue
     if (t.date.slice(0, 7) !== month) continue
     spentByCategory[t.categoryId] = (spentByCategory[t.categoryId] ?? 0) + t.amount
+    if (savingsCategoryIds.has(t.categoryId)) continue
+    if (t.isFixed) {
+      fixedByCategory[t.categoryId] = (fixedByCategory[t.categoryId] ?? 0) + t.amount
+    }
   }
 
   const withSpend = categories
     .filter((cat) => !cat.isSavings)
-    .map((cat) => ({ ...cat, spent: spentByCategory[cat.id] ?? 0 }))
+    .map((cat) => ({ ...cat, spent: spentByCategory[cat.id] ?? 0, fixedSpent: fixedByCategory[cat.id] ?? 0 }))
     .filter((cat) => cat.spent > 0)
 
-  const grouped: Record<string, { label: string; icon: LucideIcon; amount: number }> = {}
+  const grouped: Record<string, { label: string; icon: LucideIcon; amount: number; fixedAmount: number }> = {}
   for (const cat of withSpend) {
     const match = matchCategoryGroup(cat.name)
     const key = match ? match.label : cat.name
     const icon = match ? resolveIcon(match.icon) : cat.icon
-    if (!grouped[key]) grouped[key] = { label: key, icon, amount: 0 }
+    if (!grouped[key]) grouped[key] = { label: key, icon, amount: 0, fixedAmount: 0 }
     grouped[key].amount += cat.spent
+    grouped[key].fixedAmount += cat.fixedSpent
   }
   const rows = Object.values(grouped).sort((a, b) => b.amount - a.amount)
   const total = rows.reduce((s, r) => s + r.amount, 0)
@@ -52,6 +60,8 @@ export function BudgetCategories({ month }: { month: string }) {
             {rows.map((row) => {
               const Icon = row.icon
               const pct = maxAmount > 0 ? (row.amount / maxAmount) * 100 : 0
+              const rowFixedPct = row.amount > 0 ? (row.fixedAmount / row.amount) * 100 : 0
+              const rowFlexPct = 100 - rowFixedPct
               return (
                 <li key={row.label} className="flex flex-col gap-2 p-3.5">
                   <div className="flex items-center gap-3">
@@ -64,7 +74,10 @@ export function BudgetCategories({ month }: { month: string }) {
                     </span>
                   </div>
                   <div className="ml-11 h-1.5 overflow-hidden rounded-full bg-accent">
-                    <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                    <div className="flex h-full gap-0.5" style={{ width: `${pct}%` }}>
+                      <div className="h-full rounded-full bg-primary" style={{ width: `${rowFixedPct}%` }} />
+                      <div className="h-full rounded-full bg-primary/30" style={{ width: `${rowFlexPct}%` }} />
+                    </div>
                   </div>
                 </li>
               )

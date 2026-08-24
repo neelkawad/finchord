@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { SlidersHorizontal, X, ArrowDownCircle } from 'lucide-react'
+import { SlidersHorizontal, X, ArrowDownCircle, Repeat } from 'lucide-react'
 import { formatCurrency, formatDate, type TransactionType } from '@/lib/data'
 import { useMembers, useCategories, useDebts, useTransactions } from '@/lib/firestore-hooks'
 import { SelectField, type Option } from '@/components/ui/select-field'
@@ -196,9 +196,10 @@ export function TransactionsView() {
                       <p className="truncate text-sm font-medium text-foreground">
                         {isIncome ? t.source : t.merchant || cat?.name || 'Transaction'}
                       </p>
-                      <p className="truncate text-xs text-muted-foreground">
+                      <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
                         {isIncome ? 'Income' : (cat?.name ?? 'Uncategorized')}
                         {!isIncome && c ? ` · ${c.name}` : ''}
+                        {!isIncome && t.isFixed && <Repeat className="size-3 shrink-0" />}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1">

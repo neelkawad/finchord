@@ -1,10 +1,11 @@
 'use client'
 
+import { EyeOff } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/data'
 import { useCategories, useMembers, useTransactions } from '@/lib/firestore-hooks'
 import { MemberAvatar } from '@/components/ui/member-avatar'
 
-export function SavingsBreakdown({ month }: { month: string }) {
+export function SavingsBreakdown({ month, show }: { month: string; show: boolean }) {
   const { categories } = useCategories()
   const { members } = useMembers()
   const { transactions } = useTransactions()
@@ -25,12 +26,19 @@ export function SavingsBreakdown({ month }: { month: string }) {
         <h2 id="savings-heading" className="text-base font-semibold text-foreground">
           Saved/Invested
         </h2>
-        <span className="text-sm font-medium text-muted-foreground">
-          {formatCurrency(total, { compact: true })}
-        </span>
+        {show && (
+          <span className="text-sm font-medium text-muted-foreground">
+            {formatCurrency(total, { compact: true })}
+          </span>
+        )}
       </div>
       <div className="flex-1 overflow-hidden rounded-2xl border border-border bg-card">
-        {savingsRows.length === 0 ? (
+        {!show ? (
+          <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
+            <EyeOff className="size-5" />
+            Hidden — tap the eye on the Saved/Invested card to reveal.
+          </div>
+        ) : savingsRows.length === 0 ? (
           <p className="p-6 text-center text-sm text-muted-foreground">Nothing saved yet.</p>
         ) : (
           <ul className="divide-y divide-border">

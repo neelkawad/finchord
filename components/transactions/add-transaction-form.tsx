@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Trash2, ArrowDownCircle, ArrowUpCircle, Landmark } from 'lucide-react'
+import { Check, Trash2, ArrowDownCircle, ArrowUpCircle, Landmark, Repeat } from 'lucide-react'
 import { addDoc, collection, doc, updateDoc, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { HOUSEHOLD_ID } from '@/lib/constants'
@@ -31,6 +31,7 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
   const [source, setSource] = useState(transaction?.source ?? incomeSources[0])
   const [date, setDate] = useState(transaction?.date ?? today)
   const [merchant, setMerchant] = useState(transaction?.merchant ?? '')
+  const [isFixed, setIsFixed] = useState(transaction?.isFixed ?? false)
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -56,6 +57,7 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
             cardId: cardId || null,
             merchant: merchant.trim(),
             memberId: transaction?.memberId ?? member.id,
+            isFixed,
           }
     try {
       if (isEditing) {
@@ -225,6 +227,40 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
                 })}
               </div>
             )}
+          </fieldset>
+
+          {/* Fixed / flexible */}
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium text-foreground">Spending type</legend>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                aria-pressed={!isFixed}
+                onClick={() => setIsFixed(false)}
+                className={cn(
+                  'flex flex-col items-start gap-0.5 rounded-lg border px-3 py-2.5 text-left transition-colors',
+                  !isFixed ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-ring',
+                )}
+              >
+                <span className="text-sm font-medium text-foreground">Flexible</span>
+                <span className="text-xs text-muted-foreground">Can be cut back — food, shopping</span>
+              </button>
+              <button
+                type="button"
+                aria-pressed={isFixed}
+                onClick={() => setIsFixed(true)}
+                className={cn(
+                  'flex flex-col items-start gap-0.5 rounded-lg border px-3 py-2.5 text-left transition-colors',
+                  isFixed ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-ring',
+                )}
+              >
+                <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                  <Repeat className="size-3.5" />
+                  Fixed
+                </span>
+                <span className="text-xs text-muted-foreground">Recurring or debt — rent, EMI, bills</span>
+              </button>
+            </div>
           </fieldset>
         </>
       )}

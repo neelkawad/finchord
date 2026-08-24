@@ -15,6 +15,8 @@ export default function DashboardPage() {
   const { member } = useAuth()
   const firstName = member?.name.split(' ')[0] ?? ''
   const [month, setMonth] = useState(currentMonthKey())
+  const [showIncome, setShowIncome] = useState(false)
+  const [showSaved, setShowSaved] = useState(false)
 
   const isCurrentMonth = month === currentMonthKey()
   const daysLeft = daysLeftInMonth(month)
@@ -33,14 +35,20 @@ export default function DashboardPage() {
           action={<MonthPicker value={month} onChange={setMonth} />}
         />
 
-        <OverviewSummary month={month} />
+        <OverviewSummary
+          month={month}
+          showIncome={showIncome}
+          onToggleIncome={() => setShowIncome((v) => !v)}
+          showSaved={showSaved}
+          onToggleSaved={() => setShowSaved((v) => !v)}
+        />
 
         <OverspendBanner month={month} />
 
         <div className="grid gap-6 sm:grid-cols-3">
-          <IncomeSources month={month} />
+          <IncomeSources month={month} show={showIncome} />
           <BudgetCategories month={month} />
-          <SavingsBreakdown month={month} />
+          <SavingsBreakdown month={month} show={showSaved} />
         </div>
       </div>
     </main>

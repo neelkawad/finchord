@@ -93,6 +93,7 @@ export function useTransactions() {
               cardId: (data.cardId as string) || undefined,
               merchant: (data.merchant as string) || undefined,
               source: (data.source as string) || undefined,
+              isFixed: (data.isFixed as boolean) ?? false,
             }
           }),
         )

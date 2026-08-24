@@ -6,7 +6,7 @@ import { useMembers, useTransactions } from '@/lib/firestore-hooks'
 import { useAuth } from '@/lib/auth-context'
 import { MemberAvatar } from '@/components/ui/member-avatar'
 
-export function IncomeSources({ month }: { month: string }) {
+export function IncomeSources({ month, show }: { month: string; show: boolean }) {
   const { member } = useAuth()
   const canSeeIncomeDetail = member?.role === 'parent'
   const { members } = useMembers()
@@ -23,7 +23,7 @@ export function IncomeSources({ month }: { month: string }) {
         <h2 id="income-heading" className="text-base font-semibold text-foreground">
           Income sources
         </h2>
-        {canSeeIncomeDetail && (
+        {canSeeIncomeDetail && show && (
           <span className="text-sm font-medium text-muted-foreground">
             {formatCurrency(total, { compact: true })}
           </span>
@@ -34,6 +34,11 @@ export function IncomeSources({ month }: { month: string }) {
           <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
             <EyeOff className="size-5" />
             Income details are only visible to parents.
+          </div>
+        ) : !show ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
+            <EyeOff className="size-5" />
+            Hidden — tap the eye on the Income card to reveal.
           </div>
         ) : rows.length === 0 ? (
           <p className="p-6 text-center text-sm text-muted-foreground">No income logged yet.</p>
