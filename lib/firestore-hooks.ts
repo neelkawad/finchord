@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
+import { collection, doc, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { HOUSEHOLD_ID } from '@/lib/constants'
 import { resolveIcon } from '@/lib/icon-map'
@@ -153,6 +153,41 @@ export function useAssets() {
     currency: d.currency as Asset['currency'],
   }))
   return { assets: data, loading }
+}
+
+export interface WatchdogDigest {
+  month: string
+  digest: string
+  generatedAt: Date | null
+}
+
+export function useWatchdogDigest() {
+  const [data, setData] = useState<WatchdogDigest | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const ref = doc(db, 'households', HOUSEHOLD_ID, 'watchdog', 'latest')
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        const d = snap.data()
+        setData(
+          d
+            ? {
+                month: d.month as string,
+                digest: d.digest as string,
+                generatedAt: d.generatedAt?.toDate?.() ?? null,
+              }
+            : null,
+        )
+        setLoading(false)
+      },
+      () => setLoading(false),
+    )
+    return () => unsub()
+  }, [])
+
+  return { watchdog: data, loading }
 }
 
 export function usePassiveIncome() {

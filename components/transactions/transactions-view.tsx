@@ -10,7 +10,7 @@ import { MemberAvatar } from '@/components/ui/member-avatar'
 import { cn } from '@/lib/utils'
 
 type RangeKey = 'all' | '7' | '30'
-type TypeFilter = 'all' | TransactionType
+type TypeFilter = 'all' | TransactionType | 'savings' | 'fixed' | 'flexible'
 
 const rangeOptions: Option[] = [
   { value: 'all', label: 'All dates' },
@@ -19,9 +19,11 @@ const rangeOptions: Option[] = [
 ]
 
 const typeOptions: Option[] = [
-  { value: 'all', label: 'Income & expenses' },
-  { value: 'expense', label: 'Expenses only' },
+  { value: 'all', label: 'All' },
   { value: 'income', label: 'Income only' },
+  { value: 'fixed', label: 'Fixed expenses only' },
+  { value: 'flexible', label: 'Flexible expenses only' },
+  { value: 'savings', label: 'Savings only' },
 ]
 
 export function TransactionsView() {
@@ -30,7 +32,10 @@ export function TransactionsView() {
   const { debts } = useDebts()
   const cards = debts.filter((d) => d.group === 'credit')
   const { transactions } = useTransactions()
-  const savingsCategoryIds = new Set(categories.filter((c) => c.isSavings).map((c) => c.id))
+  const savingsCategoryIds = useMemo(
+    () => new Set(categories.filter((c) => c.isSavings).map((c) => c.id)),
+    [categories],
+  )
 
   const [member, setMember] = useState('all')
   const [category, setCategory] = useState('all')
@@ -59,7 +64,13 @@ export function TransactionsView() {
       if (member !== 'all' && t.memberId !== member) return false
       if (category !== 'all' && t.categoryId !== category) return false
       if (card !== 'all' && t.cardId !== card) return false
-      if (type !== 'all' && t.type !== type) return false
+      const isSavingsTxn = t.type === 'expense' && savingsCategoryIds.has(t.categoryId ?? '')
+      const isSpendingTxn = t.type === 'expense' && !isSavingsTxn
+      if (type === 'income' && t.type !== 'income') return false
+      if (type === 'expense' && !isSpendingTxn) return false
+      if (type === 'fixed' && !(isSpendingTxn && t.isFixed)) return false
+      if (type === 'flexible' && !(isSpendingTxn && !t.isFixed)) return false
+      if (type === 'savings' && !isSavingsTxn) return false
       if (range !== 'all') {
         const days = Number(range)
         const diff = (today.getTime() - new Date(t.date + 'T00:00:00').getTime()) / 86400000
@@ -67,7 +78,7 @@ export function TransactionsView() {
       }
       return true
     })
-  }, [transactions, member, category, card, type, range, today])
+  }, [transactions, member, category, card, type, range, today, savingsCategoryIds])
 
   const totalIncome = filtered.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
   const expenseTxns = filtered.filter((t) => t.type === 'expense')

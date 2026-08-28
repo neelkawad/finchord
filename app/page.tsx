@@ -7,6 +7,7 @@ import { IncomeSources } from '@/components/dashboard/income-sources'
 import { BudgetCategories } from '@/components/dashboard/budget-categories'
 import { SavingsBreakdown } from '@/components/dashboard/savings-breakdown'
 import { OverspendBanner } from '@/components/dashboard/overspend-banner'
+import { WatchdogCard } from '@/components/dashboard/watchdog-card'
 import { MonthPicker } from '@/components/dashboard/month-picker'
 import { useAuth } from '@/lib/auth-context'
 import { currentMonthKey, daysLeftInMonth, formatMonthLabel } from '@/lib/data'
@@ -44,6 +45,8 @@ export default function DashboardPage() {
         />
 
         <OverspendBanner month={month} />
+
+        <WatchdogCard />
 
         <div className="grid gap-6 sm:grid-cols-3">
           <IncomeSources month={month} show={showIncome} />
