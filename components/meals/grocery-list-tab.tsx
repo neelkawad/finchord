@@ -26,7 +26,11 @@ export function GroceryListTab() {
   const allItems = [...selected, ...extraItems]
 
   const handleSend = () => {
-    const lines = ['🛒 Grocery List', ...allItems.map((item) => `- ${item}`)]
+    const now = new Date()
+    const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+    const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+
+    const lines = [`🛒 Grocery List — ${dateStr} · ${timeStr}`, ...allItems.map((item) => `- ${item}`)]
     const text = lines.join('\n')
 
     if (navigator.share) {
