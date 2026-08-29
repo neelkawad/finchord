@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { betaZodTool } from '@anthropic-ai/sdk/helpers/beta/zod'
 import { z } from 'zod/v4'
-import { adminDb, HOUSEHOLD_ID } from './firebase-admin'
+import { getAdminDb, HOUSEHOLD_ID } from './firebase-admin'
 
 interface TransactionDoc {
   type: 'income' | 'expense'
@@ -22,14 +22,14 @@ function round2(n: number) {
 }
 
 async function getTransactionsForMonth(month: string) {
-  const snap = await adminDb.collection('households').doc(HOUSEHOLD_ID).collection('transactions').get()
+  const snap = await getAdminDb().collection('households').doc(HOUSEHOLD_ID).collection('transactions').get()
   return snap.docs
     .map((d) => d.data() as TransactionDoc)
     .filter((t) => t.date?.slice(0, 7) === month)
 }
 
 async function getCategories() {
-  const snap = await adminDb.collection('households').doc(HOUSEHOLD_ID).collection('categories').get()
+  const snap = await getAdminDb().collection('households').doc(HOUSEHOLD_ID).collection('categories').get()
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as CategoryDoc) }))
 }
 

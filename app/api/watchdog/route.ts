@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { FieldValue } from 'firebase-admin/firestore'
-import { adminDb, HOUSEHOLD_ID } from '@/lib/firebase-admin'
+import { getAdminDb, HOUSEHOLD_ID } from '@/lib/firebase-admin'
 import { runWatchdogAgent, currentMonth } from '@/lib/watchdog-agent'
 
 export async function GET(req: NextRequest) {
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const month = currentMonth()
     const digest = await runWatchdogAgent(month)
 
-    await adminDb
+    await getAdminDb()
       .collection('households')
       .doc(HOUSEHOLD_ID)
       .collection('watchdog')

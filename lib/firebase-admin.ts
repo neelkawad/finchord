@@ -1,5 +1,5 @@
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, type Firestore } from 'firebase-admin/firestore'
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -22,9 +22,21 @@ function loadServiceAccount(): object {
   )
 }
 
-if (!getApps().length) {
-  initializeApp({ credential: cert(loadServiceAccount() as any) })
+let dbInstance: Firestore | null = null
+
+// Lazy on purpose: Next.js imports route modules (to inspect their config)
+// during `next build`'s "collect page data" step, not just at request time.
+// Initializing credentials at module load would throw during every build
+// that doesn't have FIREBASE_SERVICE_ACCOUNT_B64 set — so we defer it until
+// something actually calls getAdminDb() at request time.
+export function getAdminDb(): Firestore {
+  if (!dbInstance) {
+    if (!getApps().length) {
+      initializeApp({ credential: cert(loadServiceAccount() as any) })
+    }
+    dbInstance = getFirestore()
+  }
+  return dbInstance
 }
 
-export const adminDb = getFirestore()
 export const HOUSEHOLD_ID = 'kawad-family'
