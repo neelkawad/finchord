@@ -62,6 +62,18 @@ service cloud.firestore {
       match /passiveIncome/{entryId} {
         allow read, write: if isParent(householdId);
       }
+
+      // Weekly meal plan — everyone in the household views and edits
+      match /mealPlan/{docId} {
+        allow read, write: if isMember(householdId);
+      }
+
+      // Budget Watchdog digest — everyone views; only the server (Admin SDK,
+      // which bypasses rules) writes it
+      match /watchdog/{docId} {
+        allow read: if isMember(householdId);
+        allow write: if false;
+      }
     }
   }
 }

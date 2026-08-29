@@ -190,6 +190,42 @@ export function useWatchdogDigest() {
   return { watchdog: data, loading }
 }
 
+export interface DayMeals {
+  breakfastLunchbox: string
+  lunchSnack: string
+  dinner: string
+}
+
+export type MealPlan = Record<string, DayMeals>
+
+export const MEAL_PLAN_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
+
+export function emptyMealPlan(): MealPlan {
+  const plan: MealPlan = {}
+  for (const day of MEAL_PLAN_DAYS) plan[day] = { breakfastLunchbox: '', lunchSnack: '', dinner: '' }
+  return plan
+}
+
+export function useMealPlan() {
+  const [data, setData] = useState<MealPlan | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const ref = doc(db, 'households', HOUSEHOLD_ID, 'mealPlan', 'weekly')
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        setData(snap.exists() ? (snap.data() as MealPlan) : null)
+        setLoading(false)
+      },
+      () => setLoading(false),
+    )
+    return () => unsub()
+  }, [])
+
+  return { mealPlan: data, loading }
+}
+
 export function usePassiveIncome() {
   const { data, loading } = useCollection<PassiveIncomeEntry>('passiveIncome', (id, d) => ({
     id,

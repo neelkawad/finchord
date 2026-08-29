@@ -12,6 +12,7 @@ import {
   FileText,
   MoreHorizontal,
   LogOut,
+  UtensilsCrossed,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
@@ -19,6 +20,7 @@ import { MemberAvatar } from '@/components/ui/member-avatar'
 
 const primaryNavItems = [
   { href: '/', label: 'Home', icon: LayoutDashboard, parentOnly: false },
+  { href: '/meals', label: 'Meals', icon: UtensilsCrossed, parentOnly: false },
   { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight, parentOnly: false },
   { href: '/debts', label: 'Debt', icon: CreditCard, parentOnly: false },
   { href: '/goals', label: 'Savings', icon: Target, parentOnly: true },
