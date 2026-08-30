@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MessageCircle } from 'lucide-react'
+import { Check, MessageCircle, RotateCcw } from 'lucide-react'
 import { GROCERY_CATEGORIES } from '@/lib/grocery-items'
 import { cn } from '@/lib/utils'
 
@@ -16,6 +16,11 @@ export function GroceryListTab() {
       else next.add(item)
       return next
     })
+  }
+
+  const handleReset = () => {
+    setSelected(new Set())
+    setExtra('')
   }
 
   const extraItems = extra
@@ -45,7 +50,7 @@ export function GroceryListTab() {
       {GROCERY_CATEGORIES.map(({ category, items }) => (
         <div key={category}>
           <h2 className="mb-2 text-sm font-semibold text-foreground">{category}</h2>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {items.map((item) => {
               const active = selected.has(item)
               return (
@@ -55,13 +60,21 @@ export function GroceryListTab() {
                   aria-pressed={active}
                   onClick={() => toggle(item)}
                   className={cn(
-                    'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                    'flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm font-medium transition-colors',
                     active
-                      ? 'border-primary bg-primary/5 text-primary'
-                      : 'border-border bg-card text-muted-foreground hover:border-ring hover:text-foreground',
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-card text-foreground hover:border-ring',
                   )}
                 >
-                  {item}
+                  <span
+                    className={cn(
+                      'flex size-4 shrink-0 items-center justify-center rounded-full border',
+                      active ? 'border-primary-foreground/60 bg-primary-foreground/20' : 'border-border',
+                    )}
+                  >
+                    {active && <Check className="size-3" />}
+                  </span>
+                  <span className="truncate">{item}</span>
                 </button>
               )
             })}
@@ -85,7 +98,19 @@ export function GroceryListTab() {
 
       {allItems.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-4">
-          <p className="mb-2 text-sm font-medium text-foreground">{allItems.length} item{allItems.length === 1 ? '' : 's'} selected</p>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm font-medium text-foreground">
+              {allItems.length} item{allItems.length === 1 ? '' : 's'} selected
+            </p>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              <RotateCcw className="size-3" />
+              Reset
+            </button>
+          </div>
           <p className="text-sm text-muted-foreground">{allItems.join(', ')}</p>
         </div>
       )}
