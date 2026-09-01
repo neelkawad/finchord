@@ -3,9 +3,15 @@
 import { Calendar, ChevronDown } from 'lucide-react'
 import { monthOptions } from '@/lib/data'
 
-export function MonthPicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
-  const options = monthOptions()
-
+export function MonthPicker({
+  value,
+  onChange,
+  options = monthOptions(),
+}: {
+  value: string
+  onChange: (value: string) => void
+  options?: { value: string; label: string }[]
+}) {
   return (
     <div className="relative">
       <select

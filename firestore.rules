@@ -74,6 +74,11 @@ service cloud.firestore {
         allow read: if isMember(householdId);
         allow write: if false;
       }
+
+      // Office day tracking — parents only
+      match /officeDays/{docId} {
+        allow read, write: if isParent(householdId);
+      }
     }
   }
 }

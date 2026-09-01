@@ -206,6 +206,29 @@ export function emptyMealPlan(): MealPlan {
   return plan
 }
 
+export const OFFICE_DAYS_TARGET = 12
+
+export function useOfficeDays(month: string) {
+  const [days, setDays] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const ref = doc(db, 'households', HOUSEHOLD_ID, 'officeDays', month)
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        const data = snap.data()
+        setDays((data?.days as string[]) ?? [])
+        setLoading(false)
+      },
+      () => setLoading(false),
+    )
+    return () => unsub()
+  }, [month])
+
+  return { officeDays: days, loading }
+}
+
 export function useMealPlan() {
   const [data, setData] = useState<MealPlan | null>(null)
   const [loading, setLoading] = useState(true)
