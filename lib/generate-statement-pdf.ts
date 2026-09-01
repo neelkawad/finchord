@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { formatCurrency, formatDate, formatMonthLabel, type Category, type Member } from './data'
+import { NESTLY_ICON_BASE64 } from './nestly-icon'
 import type { MonthSummary } from './reports'
 
 function txDescription(t: MonthSummary['expenseRows'][number], categories: Category[]) {
@@ -17,19 +18,22 @@ export function generateStatementPdf(summary: MonthSummary, categories: Category
   const pageWidth = doc.internal.pageSize.getWidth()
   const margin = 40
 
+  doc.addImage(NESTLY_ICON_BASE64, 'PNG', margin, 30, 24, 24)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(18)
-  doc.text('Nestly', margin, 50)
+  doc.text('Nestly', margin + 32, 48)
   doc.setFontSize(11)
   doc.setFont('helvetica', 'normal')
   doc.text('Kawad Family — Monthly Statement', margin, 68)
 
+  const [year, monthNum] = summary.month.split('-').map(Number)
+  const fromDate = new Date(year, monthNum - 1, 1).toLocaleDateString('en-US', { dateStyle: 'medium' })
+  const toDate = new Date().toLocaleDateString('en-US', { dateStyle: 'medium' })
+
   doc.setFontSize(10)
   doc.setTextColor(110)
-  doc.text(`Period: ${formatMonthLabel(summary.month)}`, pageWidth - margin, 50, { align: 'right' })
-  doc.text(`Generated: ${new Date().toLocaleDateString('en-US', { dateStyle: 'medium' })}`, pageWidth - margin, 64, {
-    align: 'right',
-  })
+  doc.text(`From: ${fromDate}`, pageWidth - margin, 50, { align: 'right' })
+  doc.text(`To: ${toDate}`, pageWidth - margin, 64, { align: 'right' })
   doc.setTextColor(0)
 
   autoTable(doc, {
@@ -51,7 +55,13 @@ export function generateStatementPdf(summary: MonthSummary, categories: Category
 
   let y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 24
 
-  const section = (title: string, rows: MonthSummary['incomeRows'], columns: string[], mapRow: (t: MonthSummary['incomeRows'][number]) => string[]) => {
+  const section = (
+    title: string,
+    rows: MonthSummary['incomeRows'],
+    columns: string[],
+    mapRow: (t: MonthSummary['incomeRows'][number]) => string[],
+    total?: number,
+  ) => {
     if (y > doc.internal.pageSize.getHeight() - 100) {
       doc.addPage()
       y = 50
@@ -59,6 +69,10 @@ export function generateStatementPdf(summary: MonthSummary, categories: Category
     doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
     doc.text(title, margin, y)
+    if (total !== undefined) {
+      doc.setFontSize(10)
+      doc.text(formatCurrency(total), pageWidth - margin, y, { align: 'right' })
+    }
     y += 8
     autoTable(doc, {
       startY: y,
@@ -72,27 +86,48 @@ export function generateStatementPdf(summary: MonthSummary, categories: Category
     y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 24
   }
 
-  section('Income', summary.incomeRows, ['Date', 'Source', 'Member', 'Amount'], (t) => [
-    formatDate(t.date),
-    t.source ?? 'Other',
-    memberName(t.memberId, members),
-    formatCurrency(t.amount),
-  ])
+  section(
+    'Income',
+    summary.incomeRows,
+    ['Date', 'Source', 'Member', 'Amount'],
+    (t) => [formatDate(t.date), t.source ?? 'Other', memberName(t.memberId, members), formatCurrency(t.amount)],
+    summary.totalIncome,
+  )
 
-  section('Expenses', summary.expenseRows, ['Date', 'Description', 'Category', 'Member', 'Amount'], (t) => [
+  const fixedExpenseRows = summary.expenseRows.filter((t) => t.isFixed)
+  const variableExpenseRows = summary.expenseRows.filter((t) => !t.isFixed)
+  const expenseColumns = ['Date', 'Description', 'Category', 'Member', 'Amount']
+  const mapExpenseRow = (t: MonthSummary['expenseRows'][number]) => [
     formatDate(t.date),
     txDescription(t, categories),
     categories.find((c) => c.id === t.categoryId)?.name ?? 'Uncategorized',
     memberName(t.memberId, members),
     formatCurrency(t.amount),
-  ])
+  ]
 
-  section('Savings & Investments', summary.savingsRows, ['Date', 'Description', 'Member', 'Amount'], (t) => [
-    formatDate(t.date),
-    txDescription(t, categories),
-    memberName(t.memberId, members),
-    formatCurrency(t.amount),
-  ])
+  section(
+    'Fixed Expenses',
+    fixedExpenseRows,
+    expenseColumns,
+    mapExpenseRow,
+    fixedExpenseRows.reduce((s, t) => s + t.amount, 0),
+  )
+
+  section(
+    'Variable Expenses',
+    variableExpenseRows,
+    expenseColumns,
+    mapExpenseRow,
+    variableExpenseRows.reduce((s, t) => s + t.amount, 0),
+  )
+
+  section(
+    'Savings & Investments',
+    summary.savingsRows,
+    ['Date', 'Description', 'Member', 'Amount'],
+    (t) => [formatDate(t.date), txDescription(t, categories), memberName(t.memberId, members), formatCurrency(t.amount)],
+    summary.toSavings,
+  )
 
   const pageCount = doc.getNumberOfPages()
   for (let i = 1; i <= pageCount; i++) {
