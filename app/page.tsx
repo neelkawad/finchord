@@ -8,6 +8,7 @@ import { BudgetCategories } from '@/components/dashboard/budget-categories'
 import { SavingsBreakdown } from '@/components/dashboard/savings-breakdown'
 import { OverspendBanner } from '@/components/dashboard/overspend-banner'
 import { WatchdogCard } from '@/components/dashboard/watchdog-card'
+import { IosInstallBanner } from '@/components/ios-install-banner'
 import { MonthPicker } from '@/components/dashboard/month-picker'
 import { useAuth } from '@/lib/auth-context'
 import { currentMonthKey, daysLeftInMonth, formatMonthLabel } from '@/lib/data'
@@ -35,6 +36,8 @@ export default function DashboardPage() {
           subtitle={subtitle}
           action={<MonthPicker value={month} onChange={setMonth} />}
         />
+
+        <IosInstallBanner />
 
         <OverviewSummary
           month={month}
