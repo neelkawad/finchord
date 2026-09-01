@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check } from 'lucide-react'
+import { Check, Pencil } from 'lucide-react'
 import { doc, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { HOUSEHOLD_ID } from '@/lib/constants'
@@ -18,6 +18,12 @@ const dayLabels: Record<string, string> = {
   sunday: 'Sunday',
 }
 
+const dayKeysBySundayFirst = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+
+function todayKey() {
+  return dayKeysBySundayFirst[new Date().getDay()]
+}
+
 const mealSlots: { key: keyof DayMeals; label: string }[] = [
   { key: 'breakfastLunchbox', label: 'Breakfast & Lunchbox' },
   { key: 'lunchSnack', label: 'Lunch & Snack' },
@@ -27,6 +33,7 @@ const mealSlots: { key: keyof DayMeals; label: string }[] = [
 export function WeeklyPlanTab() {
   const { mealPlan, loading } = useMealPlan()
   const [plan, setPlan] = useState<MealPlan>(emptyMealPlan())
+  const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -44,12 +51,45 @@ export function WeeklyPlanTab() {
     try {
       await setDoc(doc(db, 'households', HOUSEHOLD_ID, 'mealPlan', 'weekly'), plan)
       setSaved(true)
+      setEditing(false)
     } finally {
       setSaving(false)
     }
   }
 
   if (loading) return null
+
+  if (!editing) {
+    const day = todayKey()
+    const meals = plan[day]
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Today — {dayLabels[day]}</h2>
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              <Pencil className="size-3.5" />
+              Edit plan
+            </button>
+          </div>
+          <div className="flex flex-col gap-4">
+            {mealSlots.map((slot) => (
+              <div key={slot.key}>
+                <p className="text-xs font-medium text-muted-foreground">{slot.label}</p>
+                <p className={cn('mt-0.5 text-base', meals?.[slot.key] ? 'text-foreground' : 'italic text-muted-foreground/70')}>
+                  {meals?.[slot.key] || 'Not planned'}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -75,7 +115,14 @@ export function WeeklyPlanTab() {
         ))}
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => setEditing(false)}
+          className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-accent"
+        >
+          Cancel
+        </button>
         <button
           type="button"
           onClick={handleSave}
