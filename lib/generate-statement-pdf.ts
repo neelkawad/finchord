@@ -19,7 +19,7 @@ export function generateStatementPdf(summary: MonthSummary, categories: Category
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(18)
-  doc.text('FinChord', margin, 50)
+  doc.text('Nestly', margin, 50)
   doc.setFontSize(11)
   doc.setFont('helvetica', 'normal')
   doc.text('Kawad Family — Monthly Statement', margin, 68)
@@ -100,12 +100,12 @@ export function generateStatementPdf(summary: MonthSummary, categories: Category
     doc.setFontSize(8)
     doc.setTextColor(150)
     doc.text(
-      `FinChord · ${formatMonthLabel(summary.month)} · Page ${i} of ${pageCount}`,
+      `Nestly · ${formatMonthLabel(summary.month)} · Page ${i} of ${pageCount}`,
       pageWidth / 2,
       doc.internal.pageSize.getHeight() - 20,
       { align: 'center' },
     )
   }
 
-  doc.save(`FinChord-Statement-${summary.month}.pdf`)
+  doc.save(`Nestly-Statement-${summary.month}.pdf`)
 }

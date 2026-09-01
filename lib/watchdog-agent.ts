@@ -109,7 +109,7 @@ export async function runWatchdogAgent(month: string): Promise<string> {
     model: 'claude-haiku-4-5',
     max_tokens: 800,
     tools: [getMonthSummary, listTransactions],
-    system: `You are Budget Watchdog, a household finance monitor for the Kawad family's FinChord budget.
+    system: `You are Budget Watchdog, a household finance monitor for the Kawad family's Nestly budget.
 You have tools to look up this month's summary totals and individual expense transactions — call them
 as needed; you decide what to check. For example, look at the summary first, and only pull the full
 transaction list (or filter to a specific category) if something in the totals looks worth investigating

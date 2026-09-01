@@ -16,19 +16,19 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'FinChord — Family Budgeting & Finance',
+  title: 'Nestly — Family Life, Organized',
   description:
-    'FinChord is a calm, modern family budgeting app for parents and kids to track spending, budgets, cards, and savings goals together.',
+    'Nestly is a calm, modern hub for family life — budgeting, meal planning, groceries, and more, all in one place.',
   generator: 'v0.app',
   manifest: '/manifest.json',
   icons: {
-    icon: '/icon.svg',
+    icon: '/icon.png',
     apple: '/apple-icon.png',
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'FinChord',
+    title: 'Nestly',
   },
 }
 

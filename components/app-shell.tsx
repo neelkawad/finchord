@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -13,6 +14,7 @@ import {
   MoreHorizontal,
   LogOut,
   UtensilsCrossed,
+  Building2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
@@ -20,13 +22,14 @@ import { MemberAvatar } from '@/components/ui/member-avatar'
 
 const primaryNavItems = [
   { href: '/', label: 'Home', icon: LayoutDashboard, parentOnly: false },
-  { href: '/meals', label: 'Meals', icon: UtensilsCrossed, parentOnly: false },
   { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight, parentOnly: false },
   { href: '/debts', label: 'Debt', icon: CreditCard, parentOnly: false },
   { href: '/goals', label: 'Savings', icon: Target, parentOnly: true },
+  { href: '/meals', label: 'Meals', icon: UtensilsCrossed, parentOnly: false },
 ]
 
 const moreNavItems = [
+  { href: '/office', label: 'Office Days', icon: Building2, parentOnly: true },
   { href: '/accounts', label: 'Retirement', icon: Landmark, parentOnly: true },
   { href: '/reports', label: 'Reports', icon: FileText, parentOnly: true },
 ]
@@ -41,18 +44,9 @@ function isActive(pathname: string, href: string) {
 function Logo({ collapsed }: { collapsed?: boolean }) {
   return (
     <div className="flex items-center gap-2.5">
-      <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M6 18V9M12 18V6M18 18v-4"
-            stroke="currentColor"
-            strokeWidth="2.25"
-            strokeLinecap="round"
-          />
-        </svg>
-      </span>
+      <Image src="/icon.png" alt="" width={36} height={36} className="size-9 rounded-xl" />
       {!collapsed && (
-        <span className="text-lg font-semibold tracking-tight text-foreground">FinChord</span>
+        <span className="text-lg font-semibold tracking-tight text-foreground">Nestly</span>
       )}
     </div>
   )
