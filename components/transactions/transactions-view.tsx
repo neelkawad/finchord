@@ -2,11 +2,12 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { SlidersHorizontal, X, ArrowDownCircle, Repeat } from 'lucide-react'
-import { formatCurrency, formatDate, type TransactionType } from '@/lib/data'
+import { SlidersHorizontal, X, ArrowDownCircle, ChevronDown, Repeat } from 'lucide-react'
+import { formatCurrency, formatDate, formatMonthLabel, type TransactionType } from '@/lib/data'
 import { useMembers, useCategories, useDebts, useTransactions } from '@/lib/firestore-hooks'
 import { SelectField, type Option } from '@/components/ui/select-field'
 import { MemberAvatar } from '@/components/ui/member-avatar'
+import { RecurringSuggestions } from '@/components/transactions/recurring-suggestions'
 import { cn } from '@/lib/utils'
 
 type RangeKey = 'all' | '7' | '30'
@@ -80,6 +81,26 @@ export function TransactionsView() {
     })
   }, [transactions, member, category, card, type, range, today, savingsCategoryIds])
 
+  const monthGroups = useMemo(() => {
+    const groups = new Map<string, typeof filtered>()
+    for (const t of filtered) {
+      const month = t.date.slice(0, 7)
+      if (!groups.has(month)) groups.set(month, [])
+      groups.get(month)!.push(t)
+    }
+    return Array.from(groups.entries()).map(([month, items]) => ({ month, items }))
+  }, [filtered])
+
+  const [toggledMonths, setToggledMonths] = useState<Set<string>>(new Set())
+  const toggleMonth = (month: string) => {
+    setToggledMonths((prev) => {
+      const next = new Set(prev)
+      if (next.has(month)) next.delete(month)
+      else next.add(month)
+      return next
+    })
+  }
+
   const totalIncome = filtered.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
   const expenseTxns = filtered.filter((t) => t.type === 'expense')
   const totalExpense = expenseTxns
@@ -107,6 +128,8 @@ export function TransactionsView() {
 
   return (
     <div className="flex flex-col gap-4">
+      <RecurringSuggestions transactions={transactions} />
+
       {/* Filter bar */}
       <div className="rounded-xl border border-border bg-card p-4">
         <div className="flex items-center justify-between">
@@ -171,70 +194,94 @@ export function TransactionsView() {
         </div>
       </div>
 
-      {/* List */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
-        {filtered.length === 0 ? (
+      {/* List, grouped by month and collapsible */}
+      {filtered.length === 0 ? (
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <p className="px-4 py-12 text-center text-sm text-muted-foreground">
             {transactions.length === 0
               ? 'No transactions logged yet — add your first one.'
               : 'No transactions match these filters.'}
           </p>
-        ) : (
-          <ul className="divide-y divide-border">
-            {filtered.map((t) => {
-              const isIncome = t.type === 'income'
-              const cat = categories.find((c) => c.id === t.categoryId)
-              const isSavingsExpense = !isIncome && !!cat?.isSavings
-              const isPositive = isIncome || isSavingsExpense
-              const m = members.find((mm) => mm.id === t.memberId)
-              const c = cards.find((cc) => cc.id === t.cardId)
-              const Icon = isIncome ? ArrowDownCircle : cat?.icon
-              return (
-                <li key={t.id}>
-                  <Link
-                    href={`/transactions/${t.id}/edit`}
-                    className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-accent/50"
-                  >
-                    <span
-                      className={cn(
-                        'flex size-10 shrink-0 items-center justify-center rounded-full',
-                        isPositive ? 'bg-positive-muted text-positive' : 'bg-danger-muted text-danger',
-                      )}
-                    >
-                      {Icon && <Icon className="size-[18px]" />}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {isIncome ? t.source : t.merchant || cat?.name || 'Transaction'}
-                      </p>
-                      <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
-                        {isIncome ? 'Income' : (cat?.name ?? 'Uncategorized')}
-                        {!isIncome && c ? ` · ${c.name}` : ''}
-                        {!isIncome && t.isFixed && <Repeat className="size-3 shrink-0" />}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span
-                        className={cn(
-                          'text-sm font-semibold tabular-nums',
-                          isPositive ? 'text-positive' : 'text-danger',
-                        )}
-                      >
-                        {isIncome ? '+' : isSavingsExpense ? '+' : '-'}
-                        {formatCurrency(t.amount)}
-                      </span>
-                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        {m && <MemberAvatar member={m} size="sm" className="size-5 text-[9px]" />}
-                        {formatDate(t.date)}
-                      </span>
-                    </div>
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {monthGroups.map(({ month, items }, index) => {
+            const defaultExpanded = index === 0
+            const expanded = toggledMonths.has(month) ? !defaultExpanded : defaultExpanded
+            return (
+              <div key={month} className="overflow-hidden rounded-2xl border border-border bg-card">
+                <button
+                  type="button"
+                  onClick={() => toggleMonth(month)}
+                  aria-expanded={expanded}
+                  className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-accent/50"
+                >
+                  <span className="text-sm font-semibold text-foreground">{formatMonthLabel(month)}</span>
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {items.length} {items.length === 1 ? 'transaction' : 'transactions'}
+                    <ChevronDown className={cn('size-4 transition-transform', expanded && 'rotate-180')} />
+                  </span>
+                </button>
+                {expanded && (
+                  <ul className="divide-y divide-border border-t border-border">
+                    {items.map((t) => {
+                      const isIncome = t.type === 'income'
+                      const cat = categories.find((c) => c.id === t.categoryId)
+                      const isSavingsExpense = !isIncome && !!cat?.isSavings
+                      const isPositive = isIncome || isSavingsExpense
+                      const m = members.find((mm) => mm.id === t.memberId)
+                      const c = cards.find((cc) => cc.id === t.cardId)
+                      const Icon = isIncome ? ArrowDownCircle : cat?.icon
+                      return (
+                        <li key={t.id}>
+                          <Link
+                            href={`/transactions/${t.id}/edit`}
+                            className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-accent/50"
+                          >
+                            <span
+                              className={cn(
+                                'flex size-10 shrink-0 items-center justify-center rounded-full',
+                                isPositive ? 'bg-positive-muted text-positive' : 'bg-danger-muted text-danger',
+                              )}
+                            >
+                              {Icon && <Icon className="size-[18px]" />}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium text-foreground">
+                                {isIncome ? t.source : t.merchant || cat?.name || 'Transaction'}
+                              </p>
+                              <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                                {isIncome ? 'Income' : (cat?.name ?? 'Uncategorized')}
+                                {!isIncome && c ? ` · ${c.name}` : ''}
+                                {!isIncome && t.isFixed && <Repeat className="size-3 shrink-0" />}
+                              </p>
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                              <span
+                                className={cn(
+                                  'text-sm font-semibold tabular-nums',
+                                  isPositive ? 'text-positive' : 'text-danger',
+                                )}
+                              >
+                                {isIncome ? '+' : isSavingsExpense ? '+' : '-'}
+                                {formatCurrency(t.amount)}
+                              </span>
+                              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                {m && <MemberAvatar member={m} size="sm" className="size-5 text-[9px]" />}
+                                {formatDate(t.date)}
+                              </span>
+                            </div>
+                          </Link>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
