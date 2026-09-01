@@ -94,6 +94,7 @@ export function useTransactions() {
               merchant: (data.merchant as string) || undefined,
               source: (data.source as string) || undefined,
               isFixed: (data.isFixed as boolean) ?? false,
+              principalApplied: (data.principalApplied as number) || undefined,
             }
           }),
         )

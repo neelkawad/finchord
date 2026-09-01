@@ -94,6 +94,7 @@ export interface Transaction {
   merchant?: string
   source?: string
   isFixed?: boolean
+  principalApplied?: number
 }
 
 export type SavingsGoalGroup = 'savings' | 'investment' | 'education' | 'emergency'
