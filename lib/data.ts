@@ -94,7 +94,6 @@ export interface Transaction {
   merchant?: string
   source?: string
   isFixed?: boolean
-  principalApplied?: number
 }
 
 export type SavingsGoalGroup = 'savings' | 'investment' | 'education' | 'emergency'
@@ -182,6 +181,21 @@ export function monthOptions(count = 12) {
   const now = new Date()
   return Array.from({ length: count }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    return { value, label: formatMonthLabel(value) }
+  })
+}
+
+// Descending month options from `latestMonth` back to `earliestMonth` (inclusive),
+// instead of a fixed lookback count — for pickers that shouldn't offer months
+// before real data exists.
+export function monthOptionsInRange(earliestMonth: string, latestMonth: string = currentMonthKey()) {
+  const [startYear, startMonth] = earliestMonth.split('-').map(Number)
+  const [endYear, endMonth] = latestMonth.split('-').map(Number)
+  const totalMonths = (endYear - startYear) * 12 + (endMonth - startMonth) + 1
+
+  return Array.from({ length: Math.max(totalMonths, 1) }, (_, i) => {
+    const d = new Date(endYear, endMonth - 1 - i, 1)
     const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
     return { value, label: formatMonthLabel(value) }
   })

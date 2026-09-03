@@ -5,6 +5,7 @@ import { collection, doc, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { HOUSEHOLD_ID } from '@/lib/constants'
 import { resolveIcon } from '@/lib/icon-map'
+import { currentMonthKey, monthOptionsInRange } from '@/lib/data'
 import type {
   Member,
   Category,
@@ -94,7 +95,6 @@ export function useTransactions() {
               merchant: (data.merchant as string) || undefined,
               source: (data.source as string) || undefined,
               isFixed: (data.isFixed as boolean) ?? false,
-              principalApplied: (data.principalApplied as number) || undefined,
             }
           }),
         )
@@ -106,6 +106,22 @@ export function useTransactions() {
   }, [])
 
   return { transactions: data, loading }
+}
+
+// Month picker options bounded to real data — from the earliest transaction's
+// month up to the current month, instead of a fixed lookback that offers
+// empty months before the household had any data.
+export function useMonthOptions() {
+  const { transactions, loading } = useTransactions()
+
+  const earliestMonth = transactions.reduce<string | null>((earliest, t) => {
+    const month = t.date.slice(0, 7)
+    return !earliest || month < earliest ? month : earliest
+  }, null)
+
+  const options = monthOptionsInRange(earliestMonth ?? currentMonthKey())
+
+  return { options, loading }
 }
 
 export function useSavingsGoals() {

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, Trash2, ArrowDownCircle, ArrowUpCircle, Landmark, Repeat } from 'lucide-react'
-import { addDoc, collection, doc, updateDoc, deleteDoc, runTransaction } from 'firebase/firestore'
+import { addDoc, collection, doc, updateDoc, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { HOUSEHOLD_ID } from '@/lib/constants'
 import { commonMerchants, formatCurrency, incomeSources, type Transaction, type TransactionType } from '@/lib/data'
@@ -11,15 +11,14 @@ import { useCategories, useDebts } from '@/lib/firestore-hooks'
 import { useAuth } from '@/lib/auth-context'
 import { MemberAvatar } from '@/components/ui/member-avatar'
 import { CategoryPicker } from '@/components/transactions/category-picker'
-import { computeAmortizationSplit, round2 } from '@/lib/debt-payment'
 import { cn } from '@/lib/utils'
 
 export function AddTransactionForm({ transaction }: { transaction?: Transaction }) {
   const router = useRouter()
   const { member } = useAuth()
-  const isParent = member?.role === 'parent'
   const { categories } = useCategories()
   const { debts } = useDebts()
+  const creditCards = debts.filter((d) => d.group === 'credit')
   const today = new Date().toISOString().slice(0, 10)
   const isEditing = !!transaction
   const monthStart = `${today.slice(0, 4)}-${today.slice(5, 7)}-01`
@@ -42,10 +41,6 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
   const dateInRange = isEditing || (date >= monthStart && date <= monthEnd)
   const valid = amountValue > 0 && date && dateInRange && member && (type === 'income' ? source : categoryId)
 
-  const linkedDebt = type === 'expense' ? debts.find((d) => d.id === cardId) : undefined
-  const linkedDebtSplit =
-    linkedDebt && amountValue > 0 ? computeAmortizationSplit(linkedDebt.balance, linkedDebt.interestRate, amountValue) : null
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!valid || !member) return
@@ -64,57 +59,10 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
             memberId: transaction?.memberId ?? member.id,
             isFixed,
           }
-    const oldCardId = transaction?.cardId
-    const oldPrincipalApplied = transaction?.principalApplied ?? 0
-    const debtsRef = collection(db, 'households', HOUSEHOLD_ID, 'debts')
-
     try {
       if (isEditing) {
-        await runTransaction(db, async (tx) => {
-          const txRef = doc(db, 'households', HOUSEHOLD_ID, 'transactions', transaction.id)
-          const oldDebtRef = oldCardId ? doc(debtsRef, oldCardId) : null
-          const newDebtRef = cardId ? doc(debtsRef, cardId) : null
-          const oldDebtSnap = oldDebtRef ? await tx.get(oldDebtRef) : null
-          const newDebtSnap = newDebtRef && newDebtRef.id !== oldDebtRef?.id ? await tx.get(newDebtRef) : oldDebtSnap
-
-          let principalApplied: number | null = null
-
-          if (oldDebtRef && oldDebtSnap?.exists()) {
-            const oldDebtData = oldDebtSnap.data() as { balance: number; interestRate: number }
-            const reversedBalance = round2(oldDebtData.balance + oldPrincipalApplied)
-            if (newDebtRef && newDebtRef.id === oldDebtRef.id) {
-              // Same debt: undo the old payment, then reapply against the (possibly edited) amount
-              const split = computeAmortizationSplit(reversedBalance, oldDebtData.interestRate, amountValue)
-              tx.update(oldDebtRef, { balance: split.newBalance })
-              principalApplied = split.principal
-            } else {
-              tx.update(oldDebtRef, { balance: reversedBalance })
-            }
-          }
-
-          if (newDebtRef && newDebtRef.id !== oldDebtRef?.id && newDebtSnap?.exists()) {
-            const newDebtData = newDebtSnap.data() as { balance: number; interestRate: number }
-            const split = computeAmortizationSplit(newDebtData.balance, newDebtData.interestRate, amountValue)
-            tx.update(newDebtRef, { balance: split.newBalance })
-            principalApplied = split.principal
-          }
-
-          tx.update(txRef, { ...payload, principalApplied })
-        })
+        await updateDoc(doc(db, 'households', HOUSEHOLD_ID, 'transactions', transaction.id), payload)
         router.push('/transactions')
-      } else if (cardId) {
-        await runTransaction(db, async (tx) => {
-          const debtRef = doc(debtsRef, cardId)
-          const debtSnap = await tx.get(debtRef)
-          if (!debtSnap.exists()) throw new Error('Linked debt not found')
-          const debtData = debtSnap.data() as { balance: number; interestRate: number }
-          const split = computeAmortizationSplit(debtData.balance, debtData.interestRate, amountValue)
-          const newTxRef = doc(collection(db, 'households', HOUSEHOLD_ID, 'transactions'))
-          tx.set(newTxRef, { ...payload, principalApplied: split.principal })
-          tx.update(debtRef, { balance: split.newBalance })
-        })
-        setSubmitted(true)
-        setTimeout(() => router.push('/transactions'), 900)
       } else {
         await addDoc(collection(db, 'households', HOUSEHOLD_ID, 'transactions'), payload)
         setSubmitted(true)
@@ -132,20 +80,7 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
     if (!confirm('Delete this transaction?')) return
     setDeleting(true)
     try {
-      if (transaction.cardId && transaction.principalApplied) {
-        await runTransaction(db, async (tx) => {
-          const txRef = doc(db, 'households', HOUSEHOLD_ID, 'transactions', transaction.id)
-          const debtRef = doc(db, 'households', HOUSEHOLD_ID, 'debts', transaction.cardId!)
-          const debtSnap = await tx.get(debtRef)
-          if (debtSnap.exists()) {
-            const debtData = debtSnap.data() as { balance: number }
-            tx.update(debtRef, { balance: round2(debtData.balance + (transaction.principalApplied ?? 0)) })
-          }
-          tx.delete(txRef)
-        })
-      } else {
-        await deleteDoc(doc(db, 'households', HOUSEHOLD_ID, 'transactions', transaction.id))
-      }
+      await deleteDoc(doc(db, 'households', HOUSEHOLD_ID, 'transactions', transaction.id))
       router.push('/transactions')
     } catch (err) {
       console.error('Delete transaction error:', err)
@@ -255,59 +190,44 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
             <CategoryPicker categories={categories} value={categoryId} onChange={setCategoryId} />
           </fieldset>
 
-          {/* Linked debt picker — parent only, drives auto balance adjustment */}
-          {isParent && (
-            <fieldset>
-              <legend className="mb-2 text-sm font-medium text-foreground">
-                Linked debt <span className="font-normal text-muted-foreground">(optional)</span>
-              </legend>
-              {debts.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-                  No debts added yet — add one under Debt to auto-adjust its balance when you log a payment.
-                </p>
-              ) : (
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {debts.map((d) => {
-                    const active = cardId === d.id
-                    return (
-                      <button
-                        key={d.id}
-                        type="button"
-                        onClick={() => setCardId(active ? '' : d.id)}
-                        aria-pressed={active}
-                        className={cn(
-                          'flex items-center gap-3 rounded-xl border p-3 text-left transition-colors',
-                          active ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-ring',
-                        )}
-                      >
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-foreground">
-                          <Landmark className="size-4" />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-foreground">{d.name}</p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {d.interestRate}% interest · {formatCurrency(d.balance, { compact: true })} left
-                          </p>
-                        </div>
-                        {active && <Check className="ml-auto size-4 shrink-0 text-primary" />}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-              {linkedDebtSplit && (
-                <div className="mt-3 rounded-xl border border-border bg-accent/40 p-3.5 text-sm">
-                  <p className="text-foreground">
-                    <span className="font-semibold">{formatCurrency(linkedDebtSplit.principal)}</span> to principal,{' '}
-                    <span className="font-semibold">{formatCurrency(linkedDebtSplit.interest)}</span> to interest
-                  </p>
-                  <p className="mt-0.5 text-muted-foreground">
-                    New balance: {formatCurrency(linkedDebtSplit.newBalance, { compact: true })}
-                  </p>
-                </div>
-              )}
-            </fieldset>
-          )}
+          {/* Card picker */}
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium text-foreground">
+              Card <span className="font-normal text-muted-foreground">(optional)</span>
+            </legend>
+            {creditCards.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+                No credit cards added yet — add one under Debt to track spend by card.
+              </p>
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {creditCards.map((c) => {
+                  const active = cardId === c.id
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setCardId(active ? '' : c.id)}
+                      aria-pressed={active}
+                      className={cn(
+                        'flex items-center gap-3 rounded-xl border p-3 text-left transition-colors',
+                        active ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-ring',
+                      )}
+                    >
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-foreground">
+                        <Landmark className="size-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">{c.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">{c.interestRate}% interest</p>
+                      </div>
+                      {active && <Check className="ml-auto size-4 shrink-0 text-primary" />}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </fieldset>
 
           {/* Fixed / flexible */}
           <fieldset>
