@@ -11,11 +11,13 @@ import { WatchdogCard } from '@/components/dashboard/watchdog-card'
 import { IosInstallBanner } from '@/components/ios-install-banner'
 import { MonthPicker } from '@/components/dashboard/month-picker'
 import { useAuth } from '@/lib/auth-context'
+import { useMonthOptions } from '@/lib/firestore-hooks'
 import { currentMonthKey, daysLeftInMonth, formatMonthLabel } from '@/lib/data'
 
 export default function DashboardPage() {
   const { member } = useAuth()
   const firstName = member?.name.split(' ')[0] ?? ''
+  const { options: monthOptions } = useMonthOptions()
   const [month, setMonth] = useState(currentMonthKey())
   const [showIncome, setShowIncome] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
@@ -34,7 +36,7 @@ export default function DashboardPage() {
         <PageHeader
           title={`Good to see you, ${firstName}`}
           subtitle={subtitle}
-          action={<MonthPicker value={month} onChange={setMonth} />}
+          action={<MonthPicker value={month} onChange={setMonth} options={monthOptions} />}
         />
 
         <IosInstallBanner />
