@@ -1,14 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { FieldValue } from 'firebase-admin/firestore'
-import { getAdminDb, HOUSEHOLD_ID } from '@/lib/firebase-admin'
+import { getAdminDb, getAdminAuth, HOUSEHOLD_ID } from '@/lib/firebase-admin'
 import { runWatchdogAgent, currentMonth } from '@/lib/watchdog-agent'
 
-export async function GET(req: NextRequest) {
-  // Vercel Cron sends this header automatically once CRON_SECRET is set as an
-  // env var — without this check, the route would be a public URL anyone
-  // could hit to burn API credits.
+async function isAuthorized(req: NextRequest): Promise<boolean> {
   const authHeader = req.headers.get('authorization')
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+  if (!token) return false
+
+  // Vercel Cron (if ever re-enabled) sends CRON_SECRET as the bearer token.
+  if (process.env.CRON_SECRET && token === process.env.CRON_SECRET) return true
+
+  // Otherwise, the token must be a signed-in household member's Firebase ID token —
+  // this is what the Dashboard's "Refresh" button sends.
+  try {
+    const decoded = await getAdminAuth().verifyIdToken(token)
+    const memberSnap = await getAdminDb()
+      .collection('households')
+      .doc(HOUSEHOLD_ID)
+      .collection('members')
+      .doc(decoded.uid)
+      .get()
+    return memberSnap.exists
+  } catch {
+    return false
+  }
+}
+
+export async function GET(req: NextRequest) {
+  if (!(await isAuthorized(req))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -25,7 +45,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ month, digest })
   } catch (err) {
-    console.error('Budget Watchdog cron run failed:', err)
+    console.error('Budget Watchdog run failed:', err)
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 })
   }
 }

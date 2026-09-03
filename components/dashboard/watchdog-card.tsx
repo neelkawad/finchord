@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Bot, ChevronDown, Clock } from 'lucide-react'
+import { Bot, ChevronDown, Clock, RefreshCw } from 'lucide-react'
 import { useWatchdogDigest } from '@/lib/firestore-hooks'
 import { currentMonthKey, formatMonthLabel } from '@/lib/data'
+import { auth } from '@/lib/firebase'
 import { cn } from '@/lib/utils'
 
 const COLLAPSE_KEY = 'watchdog-card-collapsed'
@@ -33,6 +34,8 @@ function digestToBullets(digest: string) {
 export function WatchdogCard() {
   const { watchdog, loading } = useWatchdogDigest()
   const [collapsed, setCollapsed] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     try {
@@ -54,6 +57,22 @@ export function WatchdogCard() {
     })
   }
 
+  const refresh = async () => {
+    if (!auth.currentUser) return
+    setRefreshing(true)
+    setError('')
+    try {
+      const token = await auth.currentUser.getIdToken()
+      const res = await fetch('/api/watchdog', { headers: { Authorization: `Bearer ${token}` } })
+      if (!res.ok) throw new Error('Refresh failed')
+      // Firestore's onSnapshot (via useWatchdogDigest) picks up the new digest automatically.
+    } catch {
+      setError('Could not refresh right now. Try again.')
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   if (loading) return null
   if (!watchdog) return null
 
@@ -62,34 +81,41 @@ export function WatchdogCard() {
 
   return (
     <section aria-labelledby="watchdog-heading">
-      <button
-        type="button"
-        onClick={toggle}
-        aria-expanded={!collapsed}
-        className="mb-3 flex w-full items-baseline justify-between text-left"
-      >
-        <span className="flex items-center gap-2">
+      <div className="mb-3 flex w-full items-baseline justify-between">
+        <button type="button" onClick={toggle} aria-expanded={!collapsed} className="flex items-baseline gap-2 text-left">
           <h2 id="watchdog-heading" className="flex items-center gap-2 text-base font-semibold text-foreground">
             <Bot className="size-[18px]" />
             Budget Watchdog
           </h2>
           <span className="text-sm text-muted-foreground">· {formatMonthLabel(watchdog.month)}</span>
-        </span>
-        <span className="flex items-center gap-2">
+        </button>
+        <span className="flex items-center gap-3">
           {watchdog.generatedAt && (
             <span className="text-sm font-medium text-muted-foreground">{formatRelativeTime(watchdog.generatedAt)}</span>
           )}
-          <ChevronDown className={cn('size-4 text-muted-foreground transition-transform', !collapsed && 'rotate-180')} />
+          <button
+            type="button"
+            onClick={refresh}
+            disabled={refreshing}
+            aria-label="Refresh analysis"
+            className="text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+          >
+            <RefreshCw className={cn('size-4', refreshing && 'animate-spin')} />
+          </button>
+          <button type="button" onClick={toggle} aria-expanded={!collapsed} aria-label={collapsed ? 'Expand' : 'Collapse'}>
+            <ChevronDown className={cn('size-4 text-muted-foreground transition-transform', !collapsed && 'rotate-180')} />
+          </button>
         </span>
-      </button>
+      </div>
+      {error && <p className="mb-2 text-sm text-danger">{error}</p>}
       {!collapsed && (
         <div className="rounded-2xl border border-border bg-card p-5">
           {isStale && (
             <div className="mb-4 flex items-start gap-2.5 rounded-lg bg-warning-muted p-3 text-sm text-warning">
               <Clock className="mt-0.5 size-4 shrink-0" />
               <p>
-                This is last check-in's analysis, for <strong>{formatMonthLabel(watchdog.month)}</strong> — a fresh one
-                for {formatMonthLabel(currentMonthKey())} hasn&apos;t run yet.
+                This is from <strong>{formatMonthLabel(watchdog.month)}</strong> — tap the refresh icon above for a
+                current analysis.
               </p>
             </div>
           )}
