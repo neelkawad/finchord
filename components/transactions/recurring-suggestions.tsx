@@ -140,12 +140,21 @@ export function RecurringSuggestions({ transactions }: { transactions: Transacti
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4">
-      <h2 className="mb-1 text-sm font-semibold text-foreground">
-        Add {formatMonthLabel(thisMonth)}&apos;s recurring items
-      </h2>
+      <div className="mb-1 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-foreground">Add {formatMonthLabel(thisMonth)}&apos;s recurring items</h2>
+        <div className="flex items-center gap-2 text-xs font-medium">
+          <button type="button" onClick={() => setSelected(new Set(candidates.map((c) => c.id)))} className="text-primary hover:underline">
+            Select all
+          </button>
+          <span className="text-muted-foreground">·</span>
+          <button type="button" onClick={() => setSelected(new Set())} className="text-muted-foreground hover:text-foreground hover:underline">
+            Deselect all
+          </button>
+        </div>
+      </div>
       <p className="mb-3 text-xs text-muted-foreground">
-        Based on {formatMonthLabel(lastMonth)}, same day-of-month. Uncheck anything that shouldn&apos;t repeat, or
-        adjust the date/amount if it changed — handy for shifting pay schedules.
+        Based on {formatMonthLabel(lastMonth)}, same day-of-month. Check only what you need, or adjust the date/amount
+        if it changed — handy for shifting pay schedules.
       </p>
       <ul className="flex flex-col gap-2">
         {candidates.map((c) => {

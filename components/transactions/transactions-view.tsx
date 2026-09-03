@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { SlidersHorizontal, X, ArrowDownCircle, ChevronDown, Repeat } from 'lucide-react'
-import { formatCurrency, formatDate, formatMonthLabel, type TransactionType } from '@/lib/data'
+import { currentMonthKey, formatCurrency, formatDate, formatMonthLabel, type TransactionType } from '@/lib/data'
 import { useMembers, useCategories, useDebts, useTransactions } from '@/lib/firestore-hooks'
 import { SelectField, type Option } from '@/components/ui/select-field'
 import { MemberAvatar } from '@/components/ui/member-avatar'
@@ -101,8 +101,14 @@ export function TransactionsView() {
     })
   }
 
-  const totalIncome = filtered.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-  const expenseTxns = filtered.filter((t) => t.type === 'expense')
+  // Totals reflect the current month only — the list below still shows every
+  // month (grouped, collapsible), but an all-time total here isn't useful.
+  const currentMonthFiltered = useMemo(
+    () => filtered.filter((t) => t.date.slice(0, 7) === currentMonthKey()),
+    [filtered],
+  )
+  const totalIncome = currentMonthFiltered.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+  const expenseTxns = currentMonthFiltered.filter((t) => t.type === 'expense')
   const totalExpense = expenseTxns
     .filter((t) => !savingsCategoryIds.has(t.categoryId ?? ''))
     .reduce((s, t) => s + t.amount, 0)
@@ -174,7 +180,7 @@ export function TransactionsView() {
       {/* Summary line */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-sm">
         <span className="text-muted-foreground">
-          {filtered.length} {filtered.length === 1 ? 'transaction' : 'transactions'}
+          {currentMonthFiltered.length} {currentMonthFiltered.length === 1 ? 'transaction' : 'transactions'} this month
         </span>
         <div className="flex items-center gap-4">
           <span className="text-positive">
