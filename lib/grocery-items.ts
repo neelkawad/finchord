@@ -52,6 +52,10 @@ export const GROCERY_CATEGORIES: { category: string; items: string[] }[] = [
       'Macaroni',
       'Soya Chunks (Meal Maker)',
       'Fryums',
+      'Millets',
+      'Jowar (Sorghum)',
+      'Yellow Moong Dal',
+      'Besan (Gram Flour)',
     ],
   },
   {
@@ -86,6 +90,7 @@ export const GROCERY_CATEGORIES: { category: string; items: string[] }[] = [
       'Rose Water',
       'Jaggery',
       'Maida (All-Purpose Flour)',
+      'Tamarind',
     ],
   },
   {
