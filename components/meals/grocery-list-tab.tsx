@@ -5,7 +5,19 @@ import { Check, MessageCircle, RotateCcw } from 'lucide-react'
 import { GROCERY_CATEGORIES } from '@/lib/grocery-items'
 import { cn } from '@/lib/utils'
 
-const STORES = ['Hareli', 'Costco', 'Kroger', 'HEB', 'Other']
+const STORES = [
+  'Hareli/IB/Patel',
+  'Costco',
+  'Kroger',
+  'HEB',
+  'Walmart',
+  'Lowes',
+  'Home Depot',
+  'Dollar Tree',
+  'Five Below',
+  'Amazon',
+  'Other',
+]
 const STORE_MAP_KEY = 'grocery-item-stores'
 
 export function GroceryListTab() {
@@ -16,7 +28,14 @@ export function GroceryListTab() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORE_MAP_KEY)
-      if (saved) setItemStores(JSON.parse(saved))
+      if (saved) {
+        const parsed = JSON.parse(saved) as Record<string, string>
+        // Migrate old plain "Hareli" tags to the combined label
+        for (const item in parsed) {
+          if (parsed[item] === 'Hareli') parsed[item] = 'Hareli/IB/Patel'
+        }
+        setItemStores(parsed)
+      }
     } catch {
       // localStorage unavailable — items just default to "Other" this session
     }

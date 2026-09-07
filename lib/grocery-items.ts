@@ -26,6 +26,7 @@ export const GROCERY_CATEGORIES: { category: string; items: string[] }[] = [
       'Beetroot',
       'Sorakaya (Bottle Gourd)',
       'Gongura',
+      'Ginger Garlic Paste',
     ],
   },
   {
@@ -60,12 +61,12 @@ export const GROCERY_CATEGORIES: { category: string; items: string[] }[] = [
   },
   {
     category: 'Dairy & Meat',
-    items: ['Milk', 'Curd', 'Butter', 'Paneer', 'Cheese', 'Ghee', 'Lassi', 'Eggs', 'Chicken', 'Mutton'],
+    items: ['Milk', 'Curd', 'Butter', 'Paneer', 'Cheese', 'Ghee', 'Lassi', 'Eggs', 'Chicken', 'Mutton', 'Fish'],
   },
   {
     category: 'Oil & Spices',
     items: [
-      'Cooking Oil',
+      'Sunflower Oil',
       'Salt',
       'Sugar',
       'Turmeric',
@@ -74,6 +75,8 @@ export const GROCERY_CATEGORIES: { category: string; items: string[] }[] = [
       'Cumin Seeds',
       'Coconut Oil',
       'Gingelly Oil',
+      'Groundnut Cold-Pressed Oil',
+      'Avocado Oil',
       'Karam Podi',
       'MTR Sambar Powder',
       'Puliyogare Mix',
@@ -108,6 +111,7 @@ export const GROCERY_CATEGORIES: { category: string; items: string[] }[] = [
       'Grapes',
       'Cranberries',
       'Cherries',
+      'Avocado',
     ],
   },
   {
@@ -128,7 +132,12 @@ export const GROCERY_CATEGORIES: { category: string; items: string[] }[] = [
       'Frozen Green Peas',
       'Frozen Beans',
       'Fried Onions',
+      'Cookies',
     ],
+  },
+  {
+    category: 'Alcohol',
+    items: ['Wine', 'Beer', 'Whiskey'],
   },
   {
     category: 'Household & Personal Care',
