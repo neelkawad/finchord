@@ -49,6 +49,7 @@ export function RecurringSuggestions({ transactions }: { transactions: Transacti
     const lastMonthTxns = transactions.filter((t) => t.date.slice(0, 7) === lastMonth)
     const thisMonthTxns = transactions.filter((t) => t.date.slice(0, 7) === thisMonth)
     const thisMonthKeys = new Set(thisMonthTxns.map(candidateKey))
+    const today = new Date().getDate()
 
     const seen = new Set<string>()
     return lastMonthTxns
@@ -56,6 +57,10 @@ export function RecurringSuggestions({ transactions }: { transactions: Transacti
       .filter((t) => {
         const key = candidateKey(t)
         if (thisMonthKeys.has(key) || seen.has(key)) return false
+        // Recurring items reuse last month's day-of-month as their due day —
+        // don't surface a bill for review until that day actually arrives,
+        // instead of dumping every fixed item on the 1st.
+        if (today < Number(t.date.slice(-2))) return false
         seen.add(key)
         return true
       })

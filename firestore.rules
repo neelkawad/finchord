@@ -68,6 +68,11 @@ service cloud.firestore {
         allow read, write: if isMember(householdId);
       }
 
+      // Weekly chores — everyone in the household views and checks off their own
+      match /chores/{docId} {
+        allow read, write: if isMember(householdId);
+      }
+
       // Budget Watchdog digest — everyone views; only the server (Admin SDK,
       // which bypasses rules) writes it
       match /watchdog/{docId} {
@@ -77,6 +82,11 @@ service cloud.firestore {
 
       // Office day tracking — parents only
       match /officeDays/{docId} {
+        allow read, write: if isParent(householdId);
+      }
+
+      // Family appointments (doctor, dentist, etc.) — parents only
+      match /appointments/{appointmentId} {
         allow read, write: if isParent(householdId);
       }
     }

@@ -15,6 +15,7 @@ import type {
   SavingsAccount,
   Asset,
   PassiveIncomeEntry,
+  Appointment,
 } from '@/lib/data'
 
 function useCollection<T>(path: string, mapDoc: (id: string, data: Record<string, unknown>) => T) {
@@ -156,8 +157,24 @@ export function useSavingsAccounts() {
     type: d.type as SavingsAccount['type'],
     institution: d.institution as string,
     balance: (d.balance as number) ?? 0,
+    accountNumber: (d.accountNumber as string) || undefined,
+    routingNumber: (d.routingNumber as string) || undefined,
+    credentialsHint: (d.credentialsHint as string) || undefined,
   }))
   return { savingsAccounts: data, loading }
+}
+
+export function useAppointments() {
+  const { data, loading } = useCollection<Appointment>('appointments', (id, d) => ({
+    id,
+    title: d.title as string,
+    date: d.date as string,
+    time: (d.time as string) || undefined,
+    memberId: (d.memberId as string) || undefined,
+    notes: (d.notes as string) || undefined,
+    done: (d.done as boolean) ?? false,
+  }))
+  return { appointments: data, loading }
 }
 
 export function useAssets() {
@@ -221,6 +238,41 @@ export function emptyMealPlan(): MealPlan {
   const plan: MealPlan = {}
   for (const day of MEAL_PLAN_DAYS) plan[day] = { breakfastLunchbox: '', lunchSnack: '', dinner: '' }
   return plan
+}
+
+export interface ChoreItem {
+  id: string
+  text: string
+  memberId?: string
+  done: boolean
+}
+
+export type ChoreWeek = Record<string, ChoreItem[]>
+
+export function emptyChoreWeek(): ChoreWeek {
+  const week: ChoreWeek = {}
+  for (const day of MEAL_PLAN_DAYS) week[day] = []
+  return week
+}
+
+export function useChores() {
+  const [data, setData] = useState<ChoreWeek | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const ref = doc(db, 'households', HOUSEHOLD_ID, 'chores', 'weekly')
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        setData(snap.exists() ? (snap.data() as ChoreWeek) : null)
+        setLoading(false)
+      },
+      () => setLoading(false),
+    )
+    return () => unsub()
+  }, [])
+
+  return { chores: data, loading }
 }
 
 export const OFFICE_DAYS_TARGET = 12

@@ -23,6 +23,9 @@ export function AddSavingsForm({ account }: { account?: SavingsAccount }) {
   const [type, setType] = useState<AccountType>(account?.type ?? 'savings')
   const [institution, setInstitution] = useState(account?.institution ?? '')
   const [balance, setBalance] = useState(account ? String(account.balance) : '')
+  const [accountNumber, setAccountNumber] = useState(account?.accountNumber ?? '')
+  const [routingNumber, setRoutingNumber] = useState(account?.routingNumber ?? '')
+  const [credentialsHint, setCredentialsHint] = useState(account?.credentialsHint ?? '')
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
@@ -34,7 +37,15 @@ export function AddSavingsForm({ account }: { account?: SavingsAccount }) {
     if (!valid) return
     setSubmitting(true)
     setError('')
-    const payload = { name: name.trim(), type, institution: institution.trim(), balance: Number(balance) }
+    const payload = {
+      name: name.trim(),
+      type,
+      institution: institution.trim(),
+      balance: Number(balance),
+      accountNumber: accountNumber.trim() || null,
+      routingNumber: routingNumber.trim() || null,
+      credentialsHint: credentialsHint.trim() || null,
+    }
     try {
       if (isEditing) {
         await updateDoc(doc(db, 'households', HOUSEHOLD_ID, 'savingsAccounts', account.id), payload)
@@ -139,6 +150,53 @@ export function AddSavingsForm({ account }: { account?: SavingsAccount }) {
           </div>
         </div>
       </div>
+
+      <fieldset className="flex flex-col gap-4 rounded-lg border border-border p-4">
+        <legend className="px-1 text-sm font-medium text-foreground">In case of emergency</legend>
+        <p className="-mt-2 text-xs text-muted-foreground">
+          For family members to operate this account if something happens to you. Account/routing numbers alone can't
+          move money — for the password, point to where it's stored rather than writing it here.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="accountNumber" className="text-sm font-medium text-foreground">
+              Account number <span className="font-normal text-muted-foreground">(optional)</span>
+            </label>
+            <input
+              id="accountNumber"
+              type="text"
+              value={accountNumber}
+              onChange={(e) => setAccountNumber(e.target.value)}
+              className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="routingNumber" className="text-sm font-medium text-foreground">
+              Routing number <span className="font-normal text-muted-foreground">(optional)</span>
+            </label>
+            <input
+              id="routingNumber"
+              type="text"
+              value={routingNumber}
+              onChange={(e) => setRoutingNumber(e.target.value)}
+              className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
+            />
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="credentialsHint" className="text-sm font-medium text-foreground">
+            Where to find the login/password <span className="font-normal text-muted-foreground">(optional)</span>
+          </label>
+          <input
+            id="credentialsHint"
+            type="text"
+            placeholder="e.g. 1Password, Family vault"
+            value={credentialsHint}
+            onChange={(e) => setCredentialsHint(e.target.value)}
+            className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground/50 focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
+          />
+        </div>
+      </fieldset>
 
       {error && <p className="text-sm text-danger">{error}</p>}
 

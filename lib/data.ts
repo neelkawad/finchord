@@ -114,6 +114,19 @@ export interface SavingsAccount {
   type: AccountType
   institution: string
   balance: number
+  accountNumber?: string
+  routingNumber?: string
+  credentialsHint?: string
+}
+
+export interface Appointment {
+  id: string
+  title: string
+  date: string
+  time?: string
+  memberId?: string
+  notes?: string
+  done: boolean
 }
 
 export type AssetLocation = 'US' | 'India'

@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { PageHeader } from '@/components/page-header'
 import { WeeklyPlanTab } from '@/components/meals/weekly-plan-tab'
 import { GroceryListTab } from '@/components/meals/grocery-list-tab'
+import { ChoresTab } from '@/components/meals/chores-tab'
 import { cn } from '@/lib/utils'
 
-type Tab = 'plan' | 'grocery'
+type Tab = 'plan' | 'grocery' | 'chores'
 
 export default function MealsPage() {
   const [tab, setTab] = useState<Tab>('plan')
@@ -19,7 +20,7 @@ export default function MealsPage() {
           subtitle="The same plan every week — set it once, nobody has to ask what's for dinner."
         />
 
-        <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-1">
+        <div className="grid grid-cols-3 gap-2 rounded-xl border border-border bg-card p-1">
           <button
             type="button"
             aria-pressed={tab === 'plan'}
@@ -42,9 +43,20 @@ export default function MealsPage() {
           >
             Grocery List
           </button>
+          <button
+            type="button"
+            aria-pressed={tab === 'chores'}
+            onClick={() => setTab('chores')}
+            className={cn(
+              'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+              tab === 'chores' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            Chores
+          </button>
         </div>
 
-        {tab === 'plan' ? <WeeklyPlanTab /> : <GroceryListTab />}
+        {tab === 'plan' ? <WeeklyPlanTab /> : tab === 'grocery' ? <GroceryListTab /> : <ChoresTab />}
       </div>
     </main>
   )
