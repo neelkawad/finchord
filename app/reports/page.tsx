@@ -5,10 +5,11 @@ import { Download } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
 import { MonthPicker } from '@/components/dashboard/month-picker'
 import { useCategories, useMembers, useTransactions, useMonthOptions } from '@/lib/firestore-hooks'
-import { computeMonthSummary } from '@/lib/reports'
+import { computeMonthSummary, computeCategoryTrend } from '@/lib/reports'
 import { generateStatementPdf } from '@/lib/generate-statement-pdf'
-import { currentMonthKey, formatCurrency, formatMonthLabel } from '@/lib/data'
+import { currentMonthKey, formatCurrency, formatMonthLabel, monthOptions } from '@/lib/data'
 import { cn } from '@/lib/utils'
+import { SpendingTrendChart } from '@/components/reports/spending-trend-chart'
 
 type RowKey = 'totalIncome' | 'totalSpent' | 'toSavings' | 'balance'
 
@@ -25,7 +26,11 @@ export default function ReportsPage() {
   const { transactions } = useTransactions()
   const { options } = useMonthOptions()
 
-  const previousMonth = options[1]?.value ?? currentMonthKey()
+  // A fixed 12-month lookback, not bounded to real data like `options` — so
+  // "last month" is always selectable as the default comparison even when
+  // the household hasn't logged anything for it yet.
+  const compareOptions = monthOptions(12)
+  const previousMonth = compareOptions[1]?.value ?? currentMonthKey()
 
   const [monthA, setMonthA] = useState(currentMonthKey())
   const [monthB, setMonthB] = useState(previousMonth)
@@ -34,6 +39,12 @@ export default function ReportsPage() {
 
   const summaryA = computeMonthSummary(transactions, categories, monthA)
   const summaryB = computeMonthSummary(transactions, categories, monthB)
+
+  const trendMonths = options
+    .slice(0, 6)
+    .map((o) => o.value)
+    .reverse()
+  const categoryTrend = computeCategoryTrend(transactions, categories, trendMonths)
 
   const handleDownload = () => {
     setDownloading(true)
@@ -56,8 +67,8 @@ export default function ReportsPage() {
           </h2>
           <div className="rounded-2xl border border-border bg-card p-5">
             <div className="grid gap-3 sm:grid-cols-2">
-              <MonthPicker value={monthA} onChange={setMonthA} options={options} />
-              <MonthPicker value={monthB} onChange={setMonthB} options={options} />
+              <MonthPicker value={monthA} onChange={setMonthA} options={compareOptions} />
+              <MonthPicker value={monthB} onChange={setMonthB} options={compareOptions} />
             </div>
 
             <div className="mt-5 overflow-x-auto">
@@ -102,6 +113,13 @@ export default function ReportsPage() {
               </table>
             </div>
           </div>
+        </section>
+
+        <section aria-labelledby="trend-heading">
+          <h2 id="trend-heading" className="mb-3 text-base font-semibold text-foreground">
+            Spending Trend
+          </h2>
+          <SpendingTrendChart trend={categoryTrend} />
         </section>
 
         <section aria-labelledby="statement-heading">
