@@ -1,13 +1,40 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Check, MessageCircle, RotateCcw } from 'lucide-react'
 import { GROCERY_CATEGORIES } from '@/lib/grocery-items'
 import { cn } from '@/lib/utils'
 
+const STORES = ['Hareli', 'Costco', 'Kroger', 'HEB', 'Other']
+const STORE_MAP_KEY = 'grocery-item-stores'
+
 export function GroceryListTab() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [extra, setExtra] = useState('')
+  const [itemStores, setItemStores] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORE_MAP_KEY)
+      if (saved) setItemStores(JSON.parse(saved))
+    } catch {
+      // localStorage unavailable — items just default to "Other" this session
+    }
+  }, [])
+
+  const getStore = (item: string) => itemStores[item] ?? 'Other'
+
+  const setStore = (item: string, store: string) => {
+    setItemStores((prev) => {
+      const next = { ...prev, [item]: store }
+      try {
+        localStorage.setItem(STORE_MAP_KEY, JSON.stringify(next))
+      } catch {
+        // ignore — mapping still applies for this session
+      }
+      return next
+    })
+  }
 
   const toggle = (item: string) => {
     setSelected((prev) => {
@@ -35,7 +62,19 @@ export function GroceryListTab() {
     const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
     const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 
-    const lines = [`🛒 Grocery List — ${dateStr} · ${timeStr}`, ...allItems.map((item) => `- ${item}`)]
+    const byStore = new Map<string, string[]>()
+    for (const item of allItems) {
+      const store = getStore(item)
+      if (!byStore.has(store)) byStore.set(store, [])
+      byStore.get(store)!.push(item)
+    }
+
+    const lines = [`🛒 Grocery List — ${dateStr} · ${timeStr}`]
+    for (const store of STORES) {
+      const items = byStore.get(store)
+      if (!items?.length) continue
+      lines.push('', `📍 ${store}`, ...items.map((item) => `- ${item}`))
+    }
     const text = lines.join('\n')
 
     if (navigator.share) {
@@ -98,7 +137,7 @@ export function GroceryListTab() {
 
       {allItems.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-4">
-          <div className="mb-2 flex items-center justify-between">
+          <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-medium text-foreground">
               {allItems.length} item{allItems.length === 1 ? '' : 's'} selected
             </p>
@@ -111,7 +150,27 @@ export function GroceryListTab() {
               Reset
             </button>
           </div>
-          <p className="text-sm text-muted-foreground">{allItems.join(', ')}</p>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Tag each item with the store you usually get it from — it's remembered for next time.
+          </p>
+          <ul className="flex flex-col gap-1.5">
+            {allItems.map((item) => (
+              <li key={item} className="flex items-center justify-between gap-2 rounded-lg bg-accent/40 px-3 py-2">
+                <span className="min-w-0 truncate text-sm text-foreground">{item}</span>
+                <select
+                  value={getStore(item)}
+                  onChange={(e) => setStore(item, e.target.value)}
+                  className="shrink-0 rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground"
+                >
+                  {STORES.map((store) => (
+                    <option key={store} value={store}>
+                      {store}
+                    </option>
+                  ))}
+                </select>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
