@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import { Bar, BarChart, Cell, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 import { formatCurrency } from '@/lib/data'
 import { useCategories, useTransactions } from '@/lib/firestore-hooks'
@@ -16,9 +17,31 @@ interface Row {
   masked: boolean
 }
 
-const Y_AXIS_WIDTH = 108
-const RIGHT_MARGIN = 56
 const ROW_HEIGHT = 36
+
+// Fixed pixel widths for the label column and right margin ate a huge share
+// of a phone's screen (108px of ~340px available), leaving barely any room
+// for the bars themselves — scale both down with the card's actual measured
+// width instead of a hard breakpoint.
+function useChartDimensions() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(320)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width
+      if (w) setWidth(w)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  const yAxisWidth = Math.round(Math.max(64, Math.min(108, width * 0.3)))
+  const rightMargin = width < 360 ? 40 : 56
+  return { ref, yAxisWidth, rightMargin }
+}
 
 function cellFill(row: Row) {
   if (row.kind === 'income') return 'var(--positive)'
@@ -34,6 +57,7 @@ function cellOpacity(row: Row, segment: 'fixedAmount' | 'flexAmount') {
 export function SpendingBreakdown({ month, showIncome, showSaved }: { month: string; showIncome: boolean; showSaved: boolean }) {
   const { categories } = useCategories()
   const { transactions } = useTransactions()
+  const { ref: dimensionsRef, yAxisWidth, rightMargin } = useChartDimensions()
 
   const thisMonth = transactions.filter((t) => t.date.slice(0, 7) === month)
   const savingsCategoryIds = new Set(categories.filter((c) => c.isSavings).map((c) => c.id))
@@ -122,19 +146,19 @@ export function SpendingBreakdown({ month, showIncome, showSaved }: { month: str
         {rows.length === 0 ? (
           <p className="p-6 text-center text-sm text-muted-foreground">No activity yet this month.</p>
         ) : (
-          <div className="relative" style={{ height: chartHeight }}>
+          <div ref={dimensionsRef} className="relative" style={{ height: chartHeight }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={rows}
                 layout="vertical"
-                margin={{ top: 0, right: RIGHT_MARGIN, left: 0, bottom: 0 }}
+                margin={{ top: 0, right: rightMargin, left: 0, bottom: 0 }}
                 barCategoryGap={8}
               >
                 <XAxis type="number" hide domain={[0, domainMax]} />
                 <YAxis
                   type="category"
                   dataKey="label"
-                  width={Y_AXIS_WIDTH}
+                  width={yAxisWidth}
                   tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
                   axisLine={false}
                   tickLine={false}
@@ -162,7 +186,7 @@ export function SpendingBreakdown({ month, showIncome, showSaved }: { month: str
                   className="absolute -translate-y-1/2 whitespace-nowrap text-xs font-semibold text-foreground"
                   style={{
                     top: i * ROW_HEIGHT + ROW_HEIGHT / 2,
-                    left: `calc(${Y_AXIS_WIDTH}px + (100% - ${Y_AXIS_WIDTH + RIGHT_MARGIN}px) * ${row.amount / domainMax} + 6px)`,
+                    left: `calc(${yAxisWidth}px + (100% - ${yAxisWidth + rightMargin}px) * ${row.amount / domainMax} + 6px)`,
                   }}
                 >
                   {row.masked ? '••••' : formatCurrency(row.amount, { compact: true })}

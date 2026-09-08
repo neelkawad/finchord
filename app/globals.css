@@ -181,6 +181,19 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* This is a PWA, not a webpage — a tap-and-hold shouldn't select text and
+       pop up "Search Google for…". Inputs/textareas opt back in below since
+       people still need to select what they've typed to edit it. */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  input,
+  textarea,
+  [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
   }
   input[type='number'] {
     -moz-appearance: textfield;
