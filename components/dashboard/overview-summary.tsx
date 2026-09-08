@@ -1,16 +1,17 @@
 'use client'
 
-import { ArrowUpRight, Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import { formatCurrency } from '@/lib/data'
 import { useTransactions, useCategories } from '@/lib/firestore-hooks'
+import { cn } from '@/lib/utils'
 
 type Status = 'green' | 'amber' | 'red' | 'neutral'
 
-const iconClass: Record<Status, string> = {
-  green: 'bg-positive-muted text-positive',
-  amber: 'bg-warning-muted text-warning',
-  red: 'bg-danger-muted text-danger',
-  neutral: 'bg-accent text-foreground',
+const segmentClass: Record<Status, string> = {
+  green: 'bg-positive',
+  amber: 'bg-warning',
+  red: 'bg-danger',
+  neutral: 'bg-muted-foreground',
 }
 
 const textClass: Record<Status, string> = {
@@ -18,31 +19,6 @@ const textClass: Record<Status, string> = {
   amber: 'text-warning',
   red: 'text-danger',
   neutral: 'text-foreground',
-}
-
-const meterFillClass: Record<Status, string> = {
-  green: 'bg-positive',
-  amber: 'bg-warning',
-  red: 'bg-danger',
-  neutral: 'bg-muted-foreground',
-}
-
-const meterTrackClass: Record<Status, string> = {
-  green: 'bg-positive-muted',
-  amber: 'bg-warning-muted',
-  red: 'bg-danger-muted',
-  neutral: 'bg-accent',
-}
-
-function Meter({ pct, status }: { pct: number; status: Status }) {
-  return (
-    <div className={`mt-2.5 h-1.5 w-full overflow-hidden rounded-full ${meterTrackClass[status]}`}>
-      <div
-        className={`h-full rounded-full ${meterFillClass[status]}`}
-        style={{ width: `${Math.min(Math.max(pct, 0), 100)}%` }}
-      />
-    </div>
-  )
 }
 
 export function OverviewSummary({
@@ -68,23 +44,10 @@ export function OverviewSummary({
   const totalSpent = expenses
     .filter((t) => !savingsCategoryIds.has(t.categoryId ?? ''))
     .reduce((s, t) => s + t.amount, 0)
-  const toSavings = expenses
-    .filter((t) => savingsCategoryIds.has(t.categoryId ?? ''))
-    .reduce((s, t) => s + t.amount, 0)
-  const saved = toSavings
-
-  const spendingExpenses = expenses.filter((t) => !savingsCategoryIds.has(t.categoryId ?? ''))
-  const fixedSpent = spendingExpenses.filter((t) => t.isFixed).reduce((s, t) => s + t.amount, 0)
-  const flexibleSpent = spendingExpenses.filter((t) => !t.isFixed).reduce((s, t) => s + t.amount, 0)
-  const fixedSpentPct = totalSpent > 0 ? (fixedSpent / totalSpent) * 100 : 0
-  const flexibleSpentPct = totalSpent > 0 ? (flexibleSpent / totalSpent) * 100 : 0
+  const saved = expenses.filter((t) => savingsCategoryIds.has(t.categoryId ?? '')).reduce((s, t) => s + t.amount, 0)
 
   const spentRatio = totalIncome > 0 ? totalSpent / totalIncome : 0
-  const spentStatus: Status =
-    totalIncome === 0 ? 'neutral' : spentRatio >= 0.5 ? 'red' : spentRatio >= 0.4 ? 'amber' : 'green'
-
-  const savedRatio = totalIncome > 0 ? saved / totalIncome : 0
-  const savedStatus: Status = 'neutral'
+  const spentStatus: Status = totalIncome === 0 ? 'neutral' : spentRatio >= 0.5 ? 'red' : spentRatio >= 0.4 ? 'amber' : 'green'
 
   const spentNote =
     totalIncome === 0
@@ -97,87 +60,81 @@ export function OverviewSummary({
             ? `${Math.round(spentRatio * 100)}% of income`
             : 'This month'
 
-  const savedNote =
-    totalIncome === 0
-      ? 'Moved to savings/investment categories'
-      : showIncome && showSaved
-        ? `${Math.round(savedRatio * 100)}% of income`
-        : 'Moved to savings/investment categories'
+  const outflow = totalSpent + saved
+  const hasActivity = totalIncome > 0 || outflow > 0
+  // Bar's 100% is whichever is larger — income, or what actually went out —
+  // so an overspend month still renders sensibly instead of overflowing past 100%.
+  const barTotal = Math.max(totalIncome, outflow, 1)
+  const spentPct = (totalSpent / barTotal) * 100
+  const savedPct = (saved / barTotal) * 100
+  const remaining = totalIncome - outflow
+  const remainingPct = remaining > 0 ? (remaining / barTotal) * 100 : 0
+  const overPct = remaining < 0 ? (Math.abs(remaining) / barTotal) * 100 : 0
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <div className="rounded-2xl border border-border bg-card p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-muted-foreground">Income</span>
-          <button
-            type="button"
-            onClick={onToggleIncome}
-            aria-label={showIncome ? 'Hide income' : 'Show income'}
-            aria-pressed={showIncome}
-            className="flex size-8 items-center justify-center rounded-full bg-positive-muted text-positive transition-colors hover:bg-positive-muted/70"
-          >
-            {showIncome ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-          </button>
-        </div>
-        <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
-          {showIncome ? formatCurrency(totalIncome, { compact: true }) : '••••••'}
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {showIncome ? 'This month' : 'Tap the eye to reveal'}
-        </p>
-      </div>
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <span className="text-sm font-medium text-muted-foreground">Spent</span>
+      <p className={cn('mt-2 text-3xl font-semibold tracking-tight', textClass[spentStatus])}>
+        {formatCurrency(totalSpent, { compact: true })}
+      </p>
+      <p className="mt-1 text-sm text-muted-foreground">{spentNote}</p>
 
-      <div className="rounded-2xl border border-border bg-card p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-muted-foreground">Spent</span>
-          <span className={`flex size-8 items-center justify-center rounded-full ${iconClass[spentStatus]}`}>
-            <ArrowUpRight className="size-4" />
-          </span>
-        </div>
-        <p className={`mt-3 text-3xl font-semibold tracking-tight ${textClass[spentStatus]}`}>
-          {formatCurrency(totalSpent, { compact: true })}
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">{spentNote}</p>
-        {totalIncome > 0 && <Meter pct={spentRatio * 100} status={spentStatus} />}
-        {totalSpent > 0 && (
-          <div className="mt-3 rounded-lg bg-accent/60 p-2.5">
-            <div className="flex items-center justify-between text-[11px] font-medium text-foreground">
-              <span className="flex items-center gap-1">
-                <span className="size-1.5 shrink-0 rounded-full bg-primary" />
-                Fixed {formatCurrency(fixedSpent, { compact: true })}
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="size-1.5 shrink-0 rounded-full bg-primary/30" />
-                Flexible {formatCurrency(flexibleSpent, { compact: true })}
-              </span>
-            </div>
-            <div className="mt-1.5 flex h-1 gap-0.5 overflow-hidden rounded-full">
-              <div className="h-full rounded-full bg-primary" style={{ width: `${fixedSpentPct}%` }} />
-              <div className="h-full rounded-full bg-primary/30" style={{ width: `${flexibleSpentPct}%` }} />
-            </div>
+      {hasActivity ? (
+        <>
+          <div className="mt-4 flex h-2.5 w-full gap-0.5 overflow-hidden rounded-full bg-accent">
+            {spentPct > 0 && (
+              <div className={cn('h-full rounded-full', segmentClass[spentStatus])} style={{ width: `${spentPct}%` }} />
+            )}
+            {savedPct > 0 && <div className="h-full rounded-full bg-positive/60" style={{ width: `${savedPct}%` }} />}
+            {remainingPct > 0 && (
+              <div className="h-full rounded-full bg-muted-foreground/30" style={{ width: `${remainingPct}%` }} />
+            )}
+            {overPct > 0 && <div className="h-full rounded-full bg-danger" style={{ width: `${overPct}%` }} />}
           </div>
-        )}
-      </div>
 
-      <div className="rounded-2xl border border-border bg-card p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-muted-foreground">Saved/Invested</span>
-          <button
-            type="button"
-            onClick={onToggleSaved}
-            aria-label={showSaved ? 'Hide savings' : 'Show savings'}
-            aria-pressed={showSaved}
-            className={`flex size-8 items-center justify-center rounded-full transition-colors ${iconClass[savedStatus]}`}
-          >
-            {showSaved ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-          </button>
-        </div>
-        <p className={`mt-3 text-3xl font-semibold tracking-tight ${textClass[savedStatus]}`}>
-          {showSaved ? `${saved >= 0 ? '' : '-'}${formatCurrency(Math.abs(saved), { compact: true })}` : '••••••'}
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">{showSaved ? savedNote : 'Tap the eye to reveal'}</p>
-        {totalIncome > 0 && showSaved && <Meter pct={savedRatio * 100} status="green" />}
-      </div>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-medium">
+            <span className="flex items-center gap-1.5 text-foreground">
+              <span className="size-1.5 shrink-0 rounded-full bg-positive-muted" />
+              Income {showIncome ? formatCurrency(totalIncome, { compact: true }) : '••••'}
+              <button
+                type="button"
+                onClick={onToggleIncome}
+                aria-label={showIncome ? 'Hide income' : 'Show income'}
+                aria-pressed={showIncome}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {showIncome ? <Eye className="size-3" /> : <EyeOff className="size-3" />}
+              </button>
+            </span>
+            <span className="flex items-center gap-1.5 text-foreground">
+              <span className="size-1.5 shrink-0 rounded-full bg-positive/60" />
+              Saved {showSaved ? formatCurrency(saved, { compact: true }) : '••••'}
+              <button
+                type="button"
+                onClick={onToggleSaved}
+                aria-label={showSaved ? 'Hide savings' : 'Show savings'}
+                aria-pressed={showSaved}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {showSaved ? <Eye className="size-3" /> : <EyeOff className="size-3" />}
+              </button>
+            </span>
+            {remaining >= 0 ? (
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <span className="size-1.5 shrink-0 rounded-full bg-muted-foreground/30" />
+                Remaining {formatCurrency(remaining, { compact: true })}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 text-danger">
+                <span className="size-1.5 shrink-0 rounded-full bg-danger" />
+                {formatCurrency(Math.abs(remaining), { compact: true })} over
+              </span>
+            )}
+          </div>
+        </>
+      ) : (
+        <p className="mt-4 text-sm text-muted-foreground">No transactions yet this month.</p>
+      )}
     </div>
   )
 }

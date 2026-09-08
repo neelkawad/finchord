@@ -3,11 +3,9 @@
 import { useState } from 'react'
 import { PageHeader } from '@/components/page-header'
 import { OverviewSummary } from '@/components/dashboard/overview-summary'
-import { IncomeSources } from '@/components/dashboard/income-sources'
-import { BudgetCategories } from '@/components/dashboard/budget-categories'
-import { SavingsBreakdown } from '@/components/dashboard/savings-breakdown'
+import { SpendingBreakdown } from '@/components/dashboard/spending-breakdown'
 import { OverspendBanner } from '@/components/dashboard/overspend-banner'
-import { WatchdogCard } from '@/components/dashboard/watchdog-card'
+import { WatchdogWidget } from '@/components/dashboard/watchdog-widget'
 import { IosInstallBanner } from '@/components/ios-install-banner'
 import { MonthPicker } from '@/components/dashboard/month-picker'
 import { useAuth } from '@/lib/auth-context'
@@ -51,14 +49,10 @@ export default function DashboardPage() {
 
         <OverspendBanner month={month} />
 
-        <WatchdogCard />
-
-        <div className="grid gap-6 sm:grid-cols-3">
-          <IncomeSources month={month} show={showIncome} />
-          <BudgetCategories month={month} />
-          <SavingsBreakdown month={month} show={showSaved} />
-        </div>
+        <SpendingBreakdown month={month} showIncome={showIncome} showSaved={showSaved} />
       </div>
+
+      <WatchdogWidget />
     </main>
   )
 }

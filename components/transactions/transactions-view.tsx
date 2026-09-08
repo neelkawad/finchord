@@ -3,29 +3,12 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { SlidersHorizontal, X, ArrowDownCircle, ChevronDown, Repeat } from 'lucide-react'
-import { currentMonthKey, formatCurrency, formatDate, formatMonthLabel, type TransactionType } from '@/lib/data'
+import { currentMonthKey, formatCurrency, formatDate, formatMonthLabel } from '@/lib/data'
 import { useMembers, useCategories, useDebts, useTransactions } from '@/lib/firestore-hooks'
 import { SelectField, type Option } from '@/components/ui/select-field'
 import { MemberAvatar } from '@/components/ui/member-avatar'
 import { RecurringSuggestions } from '@/components/transactions/recurring-suggestions'
 import { cn } from '@/lib/utils'
-
-type RangeKey = 'all' | '7' | '30'
-type TypeFilter = 'all' | TransactionType | 'savings' | 'fixed' | 'flexible'
-
-const rangeOptions: Option[] = [
-  { value: 'all', label: 'All dates' },
-  { value: '7', label: 'Last 7 days' },
-  { value: '30', label: 'Last 30 days' },
-]
-
-const typeOptions: Option[] = [
-  { value: 'all', label: 'All' },
-  { value: 'income', label: 'Income only' },
-  { value: 'fixed', label: 'Fixed expenses only' },
-  { value: 'flexible', label: 'Flexible expenses only' },
-  { value: 'savings', label: 'Savings only' },
-]
 
 export function TransactionsView() {
   const { members } = useMembers()
@@ -40,9 +23,6 @@ export function TransactionsView() {
 
   const [member, setMember] = useState('all')
   const [category, setCategory] = useState('all')
-  const [card, setCard] = useState('all')
-  const [type, setType] = useState<TypeFilter>('all')
-  const [range, setRange] = useState<RangeKey>('all')
   const [showFilters, setShowFilters] = useState(false)
 
   const memberOptions: Option[] = [
@@ -53,33 +33,14 @@ export function TransactionsView() {
     { value: 'all', label: 'All categories' },
     ...categories.map((c) => ({ value: c.id, label: c.name })),
   ]
-  const cardOptions: Option[] = [
-    { value: 'all', label: 'All cards' },
-    ...cards.map((c) => ({ value: c.id, label: c.name })),
-  ]
-
-  const today = useMemo(() => new Date(), [])
 
   const filtered = useMemo(() => {
     return transactions.filter((t) => {
       if (member !== 'all' && t.memberId !== member) return false
       if (category !== 'all' && t.categoryId !== category) return false
-      if (card !== 'all' && t.cardId !== card) return false
-      const isSavingsTxn = t.type === 'expense' && savingsCategoryIds.has(t.categoryId ?? '')
-      const isSpendingTxn = t.type === 'expense' && !isSavingsTxn
-      if (type === 'income' && t.type !== 'income') return false
-      if (type === 'expense' && !isSpendingTxn) return false
-      if (type === 'fixed' && !(isSpendingTxn && t.isFixed)) return false
-      if (type === 'flexible' && !(isSpendingTxn && !t.isFixed)) return false
-      if (type === 'savings' && !isSavingsTxn) return false
-      if (range !== 'all') {
-        const days = Number(range)
-        const diff = (today.getTime() - new Date(t.date + 'T00:00:00').getTime()) / 86400000
-        if (diff > days) return false
-      }
       return true
     })
-  }, [transactions, member, category, card, type, range, today, savingsCategoryIds])
+  }, [transactions, member, category])
 
   const monthGroups = useMemo(() => {
     const groups = new Map<string, typeof filtered>()
@@ -117,19 +78,11 @@ export function TransactionsView() {
     .reduce((s, t) => s + t.amount, 0)
   const net = totalIncome - totalExpense - totalSavings
 
-  const activeFilters =
-    (member !== 'all' ? 1 : 0) +
-    (category !== 'all' ? 1 : 0) +
-    (card !== 'all' ? 1 : 0) +
-    (type !== 'all' ? 1 : 0) +
-    (range !== 'all' ? 1 : 0)
+  const activeFilters = (member !== 'all' ? 1 : 0) + (category !== 'all' ? 1 : 0)
 
   const clearAll = () => {
     setMember('all')
     setCategory('all')
-    setCard('all')
-    setType('all')
-    setRange('all')
   }
 
   return (
@@ -165,15 +118,12 @@ export function TransactionsView() {
         </div>
         <div
           className={cn(
-            'mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5',
+            'mt-3 grid gap-3 sm:grid-cols-2',
             showFilters ? 'grid' : 'hidden md:grid',
           )}
         >
-          <SelectField label="Type" value={type} onChange={(v) => setType(v as TypeFilter)} options={typeOptions} />
           <SelectField label="Member" value={member} onChange={setMember} options={memberOptions} />
           <SelectField label="Category" value={category} onChange={setCategory} options={categoryOptions} />
-          <SelectField label="Card" value={card} onChange={setCard} options={cardOptions} />
-          <SelectField label="Date range" value={range} onChange={(v) => setRange(v as RangeKey)} options={rangeOptions} />
         </div>
       </div>
 
