@@ -25,12 +25,12 @@ const primaryNavItems = [
   { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight, parentOnly: false },
   { href: '/debts', label: 'Debt', icon: CreditCard, parentOnly: false },
   { href: '/goals', label: 'Savings', icon: Target, parentOnly: true },
-  { href: '/meals', label: 'Meals', icon: UtensilsCrossed, parentOnly: false },
 ]
 
 const moreNavItems = [
-  { href: '/office', label: 'Office Days', icon: Building2, parentOnly: true },
   { href: '/accounts', label: 'Retirement', icon: Landmark, parentOnly: true },
+  { href: '/meals', label: 'Meals', icon: UtensilsCrossed, parentOnly: false },
+  { href: '/office', label: 'Office Days', icon: Building2, parentOnly: true },
   { href: '/reports', label: 'Reports', icon: FileText, parentOnly: true },
 ]
 

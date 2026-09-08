@@ -7,7 +7,7 @@ export default function AddSavingsPage() {
   return (
     <RequireParent>
       <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
-        <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
+        <div className="flex w-full max-w-xl flex-col gap-6">
           <div>
             <Link
               href="/accounts"

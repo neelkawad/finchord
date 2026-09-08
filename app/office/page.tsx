@@ -13,7 +13,7 @@ export default function OfficePage() {
 
   return (
     <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
-      <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
+      <div className="flex w-full max-w-xl flex-col gap-6">
         <PageHeader title="Office Days" subtitle="Track office days, and keep family appointments in one place." />
 
         <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-1">
