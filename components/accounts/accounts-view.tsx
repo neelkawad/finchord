@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { Landmark, Building2, Trees, TrendingUp, HeartPulse, GraduationCap, PiggyBank, Plus } from 'lucide-react'
-import { formatCurrency, formatINR, type AccountType } from '@/lib/data'
-import { useSavingsAccounts, useAssets, usePassiveIncome } from '@/lib/firestore-hooks'
+import { Landmark, Building2, Trees, TrendingUp, HeartPulse, GraduationCap, PiggyBank, Plus, ShieldCheck, Car, Home } from 'lucide-react'
+import { formatCurrency, formatINR, type AccountType, type InsuranceType } from '@/lib/data'
+import { useSavingsAccounts, useAssets, usePassiveIncome, useInsurancePolicies } from '@/lib/firestore-hooks'
 
 function AddLink({ href, label }: { href: string; label: string }) {
   return (
@@ -24,10 +24,19 @@ const accountTypeMeta: Record<AccountType, { label: string; icon: typeof Landmar
   health: { label: 'Health', icon: HeartPulse },
 }
 
+const insuranceTypeMeta: Record<InsuranceType, { label: string; icon: typeof ShieldCheck }> = {
+  life: { label: 'Life', icon: HeartPulse },
+  health: { label: 'Health', icon: ShieldCheck },
+  auto: { label: 'Auto', icon: Car },
+  home: { label: 'Home', icon: Home },
+  other: { label: 'Other', icon: ShieldCheck },
+}
+
 export function AccountsView() {
   const { savingsAccounts } = useSavingsAccounts()
   const { assets } = useAssets()
   const { passiveIncome } = usePassiveIncome()
+  const { insurancePolicies } = useInsurancePolicies()
   const totalSavings = savingsAccounts.reduce((sum, a) => sum + a.balance, 0)
 
   return (
@@ -76,6 +85,51 @@ export function AccountsView() {
                       </div>
                       <p className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
                         {formatCurrency(acc.balance, { compact: true })}
+                      </p>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      <section aria-labelledby="insurance-heading">
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <h2 id="insurance-heading" className="text-base font-semibold text-foreground">
+              Insurance
+            </h2>
+            <p className="text-sm text-muted-foreground">Life, health, auto, and home policies</p>
+          </div>
+          <AddLink href="/accounts/insurance/add" label="Add" />
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+          {insurancePolicies.length === 0 ? (
+            <p className="p-6 text-center text-sm text-muted-foreground">No policies added yet.</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {insurancePolicies.map((policy) => {
+                const meta = insuranceTypeMeta[policy.type]
+                const Icon = meta.icon
+                return (
+                  <li key={policy.id}>
+                    <Link
+                      href={`/accounts/insurance/${policy.id}/edit`}
+                      className="flex items-center gap-3 p-4 transition-colors hover:bg-accent/50"
+                    >
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-foreground">
+                        <Icon className="size-[18px]" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">{policy.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {policy.provider} · {meta.label}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
+                        {formatCurrency(policy.coverageAmount, { compact: true })}
                       </p>
                     </Link>
                   </li>

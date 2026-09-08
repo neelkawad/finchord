@@ -16,6 +16,7 @@ import type {
   Asset,
   PassiveIncomeEntry,
   Appointment,
+  InsurancePolicy,
 } from '@/lib/data'
 
 function useCollection<T>(path: string, mapDoc: (id: string, data: Record<string, unknown>) => T) {
@@ -175,6 +176,22 @@ export function useAppointments() {
     done: (d.done as boolean) ?? false,
   }))
   return { appointments: data, loading }
+}
+
+export function useInsurancePolicies() {
+  const { data, loading } = useCollection<InsurancePolicy>('insurancePolicies', (id, d) => ({
+    id,
+    name: d.name as string,
+    type: d.type as InsurancePolicy['type'],
+    provider: d.provider as string,
+    coverageAmount: (d.coverageAmount as number) ?? 0,
+    premium: (d.premium as number) ?? 0,
+    premiumFrequency: (d.premiumFrequency as InsurancePolicy['premiumFrequency']) ?? 'annual',
+    renewalDate: (d.renewalDate as string) || undefined,
+    beneficiary: (d.beneficiary as string) || undefined,
+    policyNumber: (d.policyNumber as string) || undefined,
+  }))
+  return { insurancePolicies: data, loading }
 }
 
 export function useAssets() {

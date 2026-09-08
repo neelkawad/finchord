@@ -119,6 +119,21 @@ export interface SavingsAccount {
   credentialsHint?: string
 }
 
+export type InsuranceType = 'life' | 'health' | 'auto' | 'home' | 'other'
+
+export interface InsurancePolicy {
+  id: string
+  name: string
+  type: InsuranceType
+  provider: string
+  coverageAmount: number
+  premium: number
+  premiumFrequency: 'monthly' | 'annual'
+  renewalDate?: string
+  beneficiary?: string
+  policyNumber?: string
+}
+
 export interface Appointment {
   id: string
   title: string

@@ -62,6 +62,9 @@ service cloud.firestore {
       match /passiveIncome/{entryId} {
         allow read, write: if isParent(householdId);
       }
+      match /insurancePolicies/{policyId} {
+        allow read, write: if isParent(householdId);
+      }
 
       // Weekly meal plan — everyone in the household views and edits
       match /mealPlan/{docId} {
