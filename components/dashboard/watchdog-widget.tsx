@@ -77,10 +77,13 @@ export function WatchdogWidget() {
     try {
       const token = await auth.currentUser.getIdToken()
       const res = await fetch('/api/watchdog', { headers: { Authorization: `Bearer ${token}` } })
-      if (!res.ok) throw new Error('Refresh failed')
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.error || `Refresh failed (${res.status})`)
+      }
       // Firestore's onSnapshot (via useWatchdogDigest) picks up the new digest automatically.
-    } catch {
-      setError('Could not refresh right now. Try again.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not refresh right now. Try again.')
     } finally {
       setRefreshing(false)
     }

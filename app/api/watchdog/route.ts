@@ -3,6 +3,11 @@ import { FieldValue } from 'firebase-admin/firestore'
 import { getAdminDb, getAdminAuth, HOUSEHOLD_ID } from '@/lib/firebase-admin'
 import { runWatchdogAgent, currentMonth } from '@/lib/watchdog-agent'
 
+// The tool-use loop (summary lookup, maybe a transactions pull, then the
+// digest) has taken ~20s in practice — comfortably past Vercel's default
+// serverless timeout, which was killing the request before it could finish.
+export const maxDuration = 60
+
 async function isAuthorized(req: NextRequest): Promise<boolean> {
   const authHeader = req.headers.get('authorization')
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
