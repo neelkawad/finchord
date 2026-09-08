@@ -5,6 +5,7 @@ import { formatCurrency, formatDate } from '@/lib/data'
 import { useMembers, useTransactions } from '@/lib/firestore-hooks'
 import { useAuth } from '@/lib/auth-context'
 import { MemberAvatar } from '@/components/ui/member-avatar'
+import { MagnitudeBarChart } from '@/components/dashboard/magnitude-bar-chart'
 
 export function IncomeSources({ month, show }: { month: string; show: boolean }) {
   const { member } = useAuth()
@@ -15,19 +16,19 @@ export function IncomeSources({ month, show }: { month: string; show: boolean })
   const rows = transactions
     .filter((t) => t.type === 'income' && t.date.slice(0, 7) === month)
     .sort((a, b) => (a.date < b.date ? 1 : -1))
-  const total = rows.reduce((s, t) => s + t.amount, 0)
+
+  const bySource: Record<string, number> = {}
+  for (const t of rows) bySource[t.source ?? 'Other'] = (bySource[t.source ?? 'Other'] ?? 0) + t.amount
+  const chartRows = Object.entries(bySource)
+    .map(([label, amount]) => ({ label, amount }))
+    .sort((a, b) => b.amount - a.amount)
 
   return (
     <section aria-labelledby="income-heading" className="flex h-full flex-col">
-      <div className="mb-3 flex items-baseline justify-between">
+      <div className="mb-3">
         <h2 id="income-heading" className="text-base font-semibold text-foreground">
           Income sources
         </h2>
-        {canSeeIncomeDetail && show && (
-          <span className="text-sm font-medium text-muted-foreground">
-            {formatCurrency(total, { compact: true })}
-          </span>
-        )}
       </div>
       <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card">
         {!canSeeIncomeDetail ? (
@@ -43,7 +44,11 @@ export function IncomeSources({ month, show }: { month: string; show: boolean })
         ) : rows.length === 0 ? (
           <p className="p-6 text-center text-sm text-muted-foreground">No income logged yet.</p>
         ) : (
-          <ul className="divide-y divide-border">
+          <>
+            <div className="p-4 pb-0">
+              <MagnitudeBarChart rows={chartRows} />
+            </div>
+            <ul className="mt-2 divide-y divide-border">
             {rows.map((t) => {
               const m = members.find((mm) => mm.id === t.memberId)
               return (
@@ -64,7 +69,8 @@ export function IncomeSources({ month, show }: { month: string; show: boolean })
                 </li>
               )
             })}
-          </ul>
+            </ul>
+          </>
         )}
       </div>
     </section>

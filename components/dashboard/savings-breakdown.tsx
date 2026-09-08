@@ -4,6 +4,7 @@ import { EyeOff } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/data'
 import { useCategories, useMembers, useTransactions } from '@/lib/firestore-hooks'
 import { MemberAvatar } from '@/components/ui/member-avatar'
+import { MagnitudeBarChart } from '@/components/dashboard/magnitude-bar-chart'
 
 export function SavingsBreakdown({ month, show }: { month: string; show: boolean }) {
   const { categories } = useCategories()
@@ -18,19 +19,22 @@ export function SavingsBreakdown({ month, show }: { month: string; show: boolean
   const savingsRows = expenses
     .filter((t) => t.categoryId && savingsCategoryIds.has(t.categoryId))
     .sort((a, b) => (a.date < b.date ? 1 : -1))
-  const total = savingsRows.reduce((s, t) => s + t.amount, 0)
+
+  const byCategory: Record<string, number> = {}
+  for (const t of savingsRows) {
+    const label = categories.find((c) => c.id === t.categoryId)?.name ?? 'Savings'
+    byCategory[label] = (byCategory[label] ?? 0) + t.amount
+  }
+  const chartRows = Object.entries(byCategory)
+    .map(([label, amount]) => ({ label, amount }))
+    .sort((a, b) => b.amount - a.amount)
 
   return (
     <section aria-labelledby="savings-heading" className="flex h-full flex-col">
-      <div className="mb-3 flex items-baseline justify-between">
+      <div className="mb-3">
         <h2 id="savings-heading" className="text-base font-semibold text-foreground">
           Saved/Invested
         </h2>
-        {show && (
-          <span className="text-sm font-medium text-muted-foreground">
-            {formatCurrency(total, { compact: true })}
-          </span>
-        )}
       </div>
       <div className="flex-1 overflow-hidden rounded-2xl border border-border bg-card">
         {!show ? (
@@ -41,7 +45,11 @@ export function SavingsBreakdown({ month, show }: { month: string; show: boolean
         ) : savingsRows.length === 0 ? (
           <p className="p-6 text-center text-sm text-muted-foreground">Nothing saved yet.</p>
         ) : (
-          <ul className="divide-y divide-border">
+          <>
+            <div className="p-4 pb-0">
+              <MagnitudeBarChart rows={chartRows} />
+            </div>
+            <ul className="mt-2 divide-y divide-border">
             {savingsRows.map((t) => {
               const cat = categories.find((c) => c.id === t.categoryId)
               const Icon = cat?.icon
@@ -65,7 +73,8 @@ export function SavingsBreakdown({ month, show }: { month: string; show: boolean
                 </li>
               )
             })}
-          </ul>
+            </ul>
+          </>
         )}
       </div>
     </section>

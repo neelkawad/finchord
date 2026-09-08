@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { formatCurrency, formatDate, formatMonthLabel, type Category, type Member } from './data'
+import { matchCategoryGroup } from './category-groups'
 import { NESTLY_ICON_BASE64 } from './nestly-icon'
 import type { MonthSummary } from './reports'
 
@@ -11,6 +12,65 @@ function txDescription(t: MonthSummary['expenseRows'][number], categories: Categ
 
 function memberName(memberId: string, members: Member[]) {
   return members.find((m) => m.id === memberId)?.name ?? 'Unknown'
+}
+
+// Hand-drawn with jsPDF's own rect/text primitives rather than capturing the
+// on-screen recharts SVG — deterministic output, no extra dependency, and it
+// keeps working even though the PDF is generated headlessly (no live chart
+// DOM to snapshot).
+function drawCategoryChart(
+  doc: jsPDF,
+  title: string,
+  rows: { label: string; amount: number }[],
+  startY: number,
+  margin: number,
+  pageWidth: number,
+): number {
+  if (rows.length === 0) return startY
+  let y = startY
+  const pageHeight = doc.internal.pageSize.getHeight()
+
+  if (y > pageHeight - 100) {
+    doc.addPage()
+    y = 50
+  }
+
+  doc.setFontSize(12)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(0)
+  doc.text(title, margin, y)
+  y += 16
+
+  const maxAmount = Math.max(...rows.map((r) => r.amount))
+  const labelWidth = 110
+  const amountWidth = 56
+  const barAreaWidth = pageWidth - margin * 2 - labelWidth - amountWidth
+  const barHeight = 10
+  const rowGap = 18
+
+  for (const row of rows) {
+    if (y + barHeight > pageHeight - 40) {
+      doc.addPage()
+      y = 50
+    }
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(60)
+    doc.text(row.label, margin, y + barHeight - 1, { maxWidth: labelWidth - 6 })
+
+    const barX = margin + labelWidth
+    const barW = maxAmount > 0 ? Math.max((row.amount / maxAmount) * barAreaWidth, 2) : 2
+    doc.setFillColor(15, 23, 42)
+    doc.rect(barX, y, barW, barHeight, 'F')
+
+    doc.setTextColor(20)
+    doc.text(formatCurrency(row.amount, { compact: true }), barX + barAreaWidth + 6, y + barHeight - 1)
+
+    y += rowGap
+  }
+
+  doc.setTextColor(0)
+  return y + 12
 }
 
 export function generateStatementPdf(summary: MonthSummary, categories: Category[], members: Member[]) {
@@ -54,6 +114,19 @@ export function generateStatementPdf(summary: MonthSummary, categories: Category
   })
 
   let y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 24
+
+  const categoryTotals: Record<string, number> = {}
+  for (const t of summary.expenseRows) {
+    const catName = categories.find((c) => c.id === t.categoryId)?.name ?? 'Uncategorized'
+    const match = matchCategoryGroup(catName)
+    const key = match ? match.label : catName
+    categoryTotals[key] = (categoryTotals[key] ?? 0) + t.amount
+  }
+  const categoryChartRows = Object.entries(categoryTotals)
+    .map(([label, amount]) => ({ label, amount }))
+    .sort((a, b) => b.amount - a.amount)
+
+  y = drawCategoryChart(doc, 'Expenses by Category', categoryChartRows, y, margin, pageWidth)
 
   const section = (
     title: string,

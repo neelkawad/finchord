@@ -53,7 +53,9 @@ export function RecurringSuggestions({ transactions }: { transactions: Transacti
 
     const seen = new Set<string>()
     return lastMonthTxns
-      .filter((t) => t.type === 'income' || t.isFixed)
+      // Income defaults to recurring for entries logged before the frequency
+      // toggle existed — only an explicit "One-time" (isFixed === false) opts out.
+      .filter((t) => (t.type === 'income' ? t.isFixed !== false : t.isFixed))
       .filter((t) => {
         const key = candidateKey(t)
         if (thisMonthKeys.has(key) || seen.has(key)) return false

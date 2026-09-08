@@ -31,7 +31,7 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
   const [source, setSource] = useState(transaction?.source ?? incomeSources[0])
   const [date, setDate] = useState(transaction?.date ?? today)
   const [merchant, setMerchant] = useState(transaction?.merchant ?? '')
-  const [isFixed, setIsFixed] = useState(transaction?.isFixed ?? false)
+  const [isFixed, setIsFixed] = useState(transaction?.isFixed ?? type === 'income')
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -48,7 +48,7 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
     setError('')
     const payload =
       type === 'income'
-        ? { type, amount: amountValue, date, source, memberId: transaction?.memberId ?? member.id }
+        ? { type, amount: amountValue, date, source, memberId: transaction?.memberId ?? member.id, isFixed }
         : {
             type,
             amount: amountValue,
@@ -113,7 +113,10 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
           <button
             type="button"
             aria-pressed={type === 'expense'}
-            onClick={() => setType('expense')}
+            onClick={() => {
+              setType('expense')
+              if (!isEditing) setIsFixed(false)
+            }}
             className={cn(
               'flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors',
               type === 'expense' ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-card text-foreground hover:border-ring',
@@ -125,7 +128,10 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
           <button
             type="button"
             aria-pressed={type === 'income'}
-            onClick={() => setType('income')}
+            onClick={() => {
+              setType('income')
+              if (!isEditing) setIsFixed(true)
+            }}
             className={cn(
               'flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors',
               type === 'income' ? 'border-positive bg-positive-muted text-positive' : 'border-border bg-card text-foreground hover:border-ring',
@@ -160,28 +166,64 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
       </div>
 
       {type === 'income' ? (
-        <fieldset>
-          <legend className="mb-2 text-sm font-medium text-foreground">Source</legend>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {incomeSources.map((s) => {
-              const active = source === s
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => setSource(s)}
-                  className={cn(
-                    'rounded-lg border px-3 py-2 text-sm font-medium transition-colors',
-                    active ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-card text-foreground hover:border-ring',
-                  )}
-                >
-                  {s}
-                </button>
-              )
-            })}
-          </div>
-        </fieldset>
+        <>
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium text-foreground">Source</legend>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {incomeSources.map((s) => {
+                const active = source === s
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setSource(s)}
+                    className={cn(
+                      'rounded-lg border px-3 py-2 text-sm font-medium transition-colors',
+                      active ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-card text-foreground hover:border-ring',
+                    )}
+                  >
+                    {s}
+                  </button>
+                )
+              })}
+            </div>
+          </fieldset>
+
+          {/* Recurring toggle */}
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium text-foreground">Frequency</legend>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                aria-pressed={!isFixed}
+                onClick={() => setIsFixed(false)}
+                className={cn(
+                  'flex flex-col items-start gap-0.5 rounded-lg border px-3 py-2.5 text-left transition-colors',
+                  !isFixed ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-ring',
+                )}
+              >
+                <span className="text-sm font-medium text-foreground">One-time</span>
+                <span className="text-xs text-muted-foreground">Bonus, gift — won't be suggested next month</span>
+              </button>
+              <button
+                type="button"
+                aria-pressed={isFixed}
+                onClick={() => setIsFixed(true)}
+                className={cn(
+                  'flex flex-col items-start gap-0.5 rounded-lg border px-3 py-2.5 text-left transition-colors',
+                  isFixed ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-ring',
+                )}
+              >
+                <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                  <Repeat className="size-3.5" />
+                  Recurring
+                </span>
+                <span className="text-xs text-muted-foreground">Salary, allowance — comes up for review each month</span>
+              </button>
+            </div>
+          </fieldset>
+        </>
       ) : (
         <>
           {/* Category picker */}
