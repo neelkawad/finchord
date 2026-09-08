@@ -344,7 +344,10 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
             className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground/60 focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
           />
           <div className="flex flex-wrap gap-1.5 pt-1">
-            {commonMerchants.map((m) => {
+            {(merchant.trim()
+              ? commonMerchants.filter((m) => m.toLowerCase().includes(merchant.trim().toLowerCase()))
+              : commonMerchants
+            ).map((m) => {
               const active = merchant === m
               return (
                 <button

@@ -1,6 +1,6 @@
 'use client'
 
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, Cell, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 import { formatCurrency } from '@/lib/data'
 import { useCategories, useTransactions } from '@/lib/firestore-hooks'
 import { matchCategoryGroup } from '@/lib/category-groups'
@@ -138,16 +138,6 @@ export function SpendingBreakdown({ month, showIncome, showSaved }: { month: str
                   tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
                   axisLine={false}
                   tickLine={false}
-                />
-                <Tooltip
-                  cursor={{ fill: 'var(--accent)' }}
-                  formatter={(value, name, item) => {
-                    const row = item?.payload as Row | undefined
-                    if (row?.masked) return ['Hidden', row.kind === 'income' ? 'Income' : 'Savings']
-                    if (row?.kind !== 'expense') return [formatCurrency(Number(value)), row?.kind === 'income' ? 'Income' : 'Savings']
-                    return [formatCurrency(Number(value)), name === 'fixedAmount' ? 'Fixed' : 'Flexible']
-                  }}
-                  contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
                 />
                 <Bar dataKey="fixedAmount" stackId="spend" stroke="var(--card)" strokeWidth={2} maxBarSize={20}>
                   {rows.map((row, i) => (

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Pencil, Trash2, Check, X, PiggyBank } from 'lucide-react'
+import { Plus, Pencil, Trash2, Check, X, PiggyBank, Search } from 'lucide-react'
 import { addDoc, collection, doc, updateDoc, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { HOUSEHOLD_ID } from '@/lib/constants'
@@ -12,17 +12,19 @@ import type { Category } from '@/lib/data'
 
 function CategoryEditor({
   initial,
+  initialName,
   onSaved,
   onCancel,
   onDeleted,
 }: {
   initial?: Category
+  initialName?: string
   onSaved: (id: string) => void
   onCancel: () => void
   onDeleted?: () => void
 }) {
   const isEditing = !!initial
-  const [name, setName] = useState(initial?.name ?? '')
+  const [name, setName] = useState(initial?.name ?? initialName ?? '')
   const [icon, setIcon] = useState(initial?.iconKey ?? iconKeys[0])
   const [isSavings, setIsSavings] = useState(initial?.isSavings ?? false)
   const [submitting, setSubmitting] = useState(false)
@@ -165,10 +167,12 @@ export function CategoryPicker({
   const canManage = member?.role === 'parent'
   const [mode, setMode] = useState<'pick' | 'add' | 'edit'>('pick')
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [search, setSearch] = useState('')
 
   if (mode === 'add') {
     return (
       <CategoryEditor
+        initialName={search.trim()}
         onSaved={(id) => {
           onChange(id)
           setMode('pick')
@@ -199,9 +203,26 @@ export function CategoryPicker({
     )
   }
 
+  const filtered = search.trim()
+    ? categories.filter((c) => c.name.toLowerCase().includes(search.trim().toLowerCase()))
+    : categories
+
   return (
-    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-      {categories.map((cat) => {
+    <div className="flex flex-col gap-3">
+      {categories.length > 8 && (
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search categories"
+            className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm text-foreground shadow-sm placeholder:text-muted-foreground/60 focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
+          />
+        </div>
+      )}
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+        {filtered.map((cat) => {
         const Icon = cat.icon
         const active = value === cat.id
         return (
@@ -256,6 +277,7 @@ export function CategoryPicker({
           <span className="text-xs font-medium leading-tight">New Category</span>
         </button>
       )}
+      </div>
     </div>
   )
 }
