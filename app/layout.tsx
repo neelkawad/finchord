@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { AppShell } from '@/components/app-shell'
+import { RegisterServiceWorker } from '@/components/register-service-worker'
 import { AuthProvider } from '@/lib/auth-context'
 import './globals.css'
 
@@ -44,6 +45,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`light ${geistSans.variable} ${geistMono.variable}`}>
       <body className="bg-background font-sans antialiased">
+        <RegisterServiceWorker />
         <AuthProvider>
           <AppShell>{children}</AppShell>
         </AuthProvider>
