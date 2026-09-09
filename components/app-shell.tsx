@@ -44,12 +44,10 @@ function isActive(pathname: string, href: string) {
 }
 
 function Logo({ collapsed }: { collapsed?: boolean }) {
+  const size = collapsed ? 40 : 84
   return (
     <div className="flex items-center gap-2.5">
-      <Image src="/icon.png" alt="" width={36} height={36} className="size-9 rounded-xl" />
-      {!collapsed && (
-        <span className="text-lg font-semibold tracking-tight text-foreground">Nestly</span>
-      )}
+      <Image src="/icon.png" alt="Nestly" width={size} height={size} className="rounded-lg" />
     </div>
   )
 }

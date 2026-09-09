@@ -39,9 +39,8 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6">
-        <div className="mb-6 flex items-center gap-2.5">
-          <Image src="/icon.png" alt="" width={36} height={36} className="size-9 rounded-xl" />
-          <span className="text-lg font-semibold tracking-tight text-foreground">Nestly</span>
+        <div className="mb-4 flex justify-center">
+          <Image src="/transparent-logo.svg" alt="Nestly — Kawad Family" width={220} height={220} className="h-40 w-40" priority />
         </div>
         <h1 className="text-xl font-semibold text-foreground">Sign in</h1>
         <p className="mt-1 text-sm text-muted-foreground">Sign in with your family account.</p>
