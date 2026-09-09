@@ -1,6 +1,6 @@
 'use client'
 
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { CategoryTrend } from '@/lib/reports'
 import { formatCurrency, formatMonthLabel } from '@/lib/data'
 
@@ -27,7 +27,7 @@ export function SpendingTrendChart({ trend }: { trend: CategoryTrend }) {
     <div className="rounded-2xl border border-border bg-card p-5">
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
+          <LineChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
             <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
             <YAxis
@@ -47,10 +47,21 @@ export function SpendingTrendChart({ trend }: { trend: CategoryTrend }) {
               }}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
-            {trend.series.map((s, i) => (
-              <Bar key={s.id} dataKey={s.name} stackId="spend" fill={SERIES_COLORS[i % SERIES_COLORS.length]} radius={i === trend.series.length - 1 ? [4, 4, 0, 0] : 0} />
-            ))}
-          </BarChart>
+            {trend.series.map((s, i) => {
+              const color = SERIES_COLORS[i % SERIES_COLORS.length]
+              return (
+                <Line
+                  key={s.id}
+                  type="monotone"
+                  dataKey={s.name}
+                  stroke={color}
+                  strokeWidth={2}
+                  dot={{ r: 4, fill: color, strokeWidth: 2, stroke: 'var(--card)' }}
+                  activeDot={{ r: 6, strokeWidth: 2, stroke: 'var(--card)' }}
+                />
+              )
+            })}
+          </LineChart>
         </ResponsiveContainer>
       </div>
     </div>
