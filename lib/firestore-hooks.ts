@@ -17,6 +17,8 @@ import type {
   PassiveIncomeEntry,
   Appointment,
   InsurancePolicy,
+  FamilyDocument,
+  VitalEntry,
 } from '@/lib/data'
 
 function useCollection<T>(path: string, mapDoc: (id: string, data: Record<string, unknown>) => T) {
@@ -176,6 +178,30 @@ export function useAppointments() {
     done: (d.done as boolean) ?? false,
   }))
   return { appointments: data, loading }
+}
+
+export function useFamilyDocuments() {
+  const { data, loading } = useCollection<FamilyDocument>('familyDocuments', (id, d) => ({
+    id,
+    title: d.title as string,
+    type: d.type as FamilyDocument['type'],
+    memberId: (d.memberId as string) || undefined,
+    expiryDate: d.expiryDate as string,
+    notes: (d.notes as string) || undefined,
+  }))
+  return { familyDocuments: data, loading }
+}
+
+export function useVitalEntries() {
+  const { data, loading } = useCollection<VitalEntry>('vitals', (id, d) => ({
+    id,
+    memberId: d.memberId as string,
+    date: d.date as string,
+    heightIn: (d.heightIn as number) || undefined,
+    weightLb: (d.weightLb as number) || undefined,
+    notes: (d.notes as string) || undefined,
+  }))
+  return { vitalEntries: data, loading }
 }
 
 export function useInsurancePolicies() {

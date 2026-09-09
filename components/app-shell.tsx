@@ -15,6 +15,7 @@ import {
   LogOut,
   UtensilsCrossed,
   Building2,
+  HeartPulse,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
@@ -29,8 +30,9 @@ const primaryNavItems = [
 
 const moreNavItems = [
   { href: '/accounts', label: 'Retirement', icon: Landmark, parentOnly: true },
-  { href: '/meals', label: 'Meals', icon: UtensilsCrossed, parentOnly: false },
-  { href: '/office', label: 'Office Days', icon: Building2, parentOnly: true },
+  { href: '/meals', label: 'Food Management', icon: UtensilsCrossed, parentOnly: false },
+  { href: '/office', label: 'Family Calendar', icon: Building2, parentOnly: true },
+  { href: '/health', label: 'Health', icon: HeartPulse, parentOnly: true },
   { href: '/reports', label: 'Reports', icon: FileText, parentOnly: true },
 ]
 

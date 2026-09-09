@@ -7,7 +7,7 @@ import { GroceryListTab } from '@/components/meals/grocery-list-tab'
 import { ChoresTab } from '@/components/meals/chores-tab'
 import { cn } from '@/lib/utils'
 
-type Tab = 'plan' | 'grocery' | 'chores'
+type Tab = 'grocery' | 'chores' | 'plan'
 
 export default function MealsPage() {
   const [tab, setTab] = useState<Tab>('plan')
@@ -16,22 +16,11 @@ export default function MealsPage() {
     <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
       <div className="flex w-full max-w-2xl flex-col gap-6">
         <PageHeader
-          title="Meal Plan"
+          title="Food Management"
           subtitle="The same plan every week — set it once, nobody has to ask what's for dinner."
         />
 
         <div className="grid grid-cols-3 gap-2 rounded-xl border border-border bg-card p-1">
-          <button
-            type="button"
-            aria-pressed={tab === 'plan'}
-            onClick={() => setTab('plan')}
-            className={cn(
-              'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-              tab === 'plan' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            Weekly Plan
-          </button>
           <button
             type="button"
             aria-pressed={tab === 'grocery'}
@@ -54,9 +43,20 @@ export default function MealsPage() {
           >
             Chores
           </button>
+          <button
+            type="button"
+            aria-pressed={tab === 'plan'}
+            onClick={() => setTab('plan')}
+            className={cn(
+              'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+              tab === 'plan' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            Meal Plan
+          </button>
         </div>
 
-        {tab === 'plan' ? <WeeklyPlanTab /> : tab === 'grocery' ? <GroceryListTab /> : <ChoresTab />}
+        {tab === 'grocery' ? <GroceryListTab /> : tab === 'chores' ? <ChoresTab /> : <WeeklyPlanTab />}
       </div>
     </main>
   )

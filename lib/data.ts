@@ -144,6 +144,26 @@ export interface Appointment {
   done: boolean
 }
 
+export type DocumentType = 'passport' | 'visa' | 'license' | 'green_card' | 'other'
+
+export interface FamilyDocument {
+  id: string
+  title: string
+  type: DocumentType
+  memberId?: string
+  expiryDate: string
+  notes?: string
+}
+
+export interface VitalEntry {
+  id: string
+  memberId: string
+  date: string
+  heightIn?: number
+  weightLb?: number
+  notes?: string
+}
+
 export type AssetLocation = 'US' | 'India'
 
 export interface Asset {

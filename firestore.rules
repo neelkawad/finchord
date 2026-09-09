@@ -92,6 +92,16 @@ service cloud.firestore {
       match /appointments/{appointmentId} {
         allow read, write: if isParent(householdId);
       }
+
+      // Passport/visa/license expiry tracking — parents only
+      match /familyDocuments/{docId} {
+        allow read, write: if isParent(householdId);
+      }
+
+      // Growth/vitals log — parents only
+      match /vitals/{entryId} {
+        allow read, write: if isParent(householdId);
+      }
     }
   }
 }
