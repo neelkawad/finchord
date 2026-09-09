@@ -30,8 +30,8 @@ const primaryNavItems = [
 
 const moreNavItems = [
   { href: '/accounts', label: 'Retirement', icon: Landmark, parentOnly: true },
-  { href: '/meals', label: 'Food Management', icon: UtensilsCrossed, parentOnly: false },
-  { href: '/office', label: 'Family Calendar', icon: Building2, parentOnly: true },
+  { href: '/meals', label: 'Pantry', icon: UtensilsCrossed, parentOnly: false },
+  { href: '/office', label: 'Organizer', icon: Building2, parentOnly: true },
   { href: '/health', label: 'Health', icon: HeartPulse, parentOnly: true },
   { href: '/reports', label: 'Reports', icon: FileText, parentOnly: true },
 ]
@@ -43,8 +43,7 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(href)
 }
 
-function Logo({ collapsed }: { collapsed?: boolean }) {
-  const size = collapsed ? 40 : 84
+function Logo({ size = 84 }: { size?: number }) {
   return (
     <div className="flex items-center gap-2.5">
       <Image src="/icon.png" alt="Nestly" width={size} height={size} className="rounded-lg" />
@@ -139,7 +138,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col pb-20 md:pb-0">
         {/* Mobile top bar */}
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
-          <Logo />
+          <Logo size={74} />
           <div className="flex items-center gap-3">
             <MemberAvatar member={member} size="sm" />
             <button

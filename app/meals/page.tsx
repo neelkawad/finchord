@@ -10,13 +10,13 @@ import { cn } from '@/lib/utils'
 type Tab = 'grocery' | 'chores' | 'plan'
 
 export default function MealsPage() {
-  const [tab, setTab] = useState<Tab>('plan')
+  const [tab, setTab] = useState<Tab>('grocery')
 
   return (
     <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
       <div className="flex w-full max-w-2xl flex-col gap-6">
         <PageHeader
-          title="Food Management"
+          title="Pantry"
           subtitle="The same plan every week — set it once, nobody has to ask what's for dinner."
         />
 
