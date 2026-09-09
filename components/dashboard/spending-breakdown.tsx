@@ -38,8 +38,12 @@ function useChartDimensions() {
     return () => observer.disconnect()
   }, [])
 
-  const yAxisWidth = Math.round(Math.max(64, Math.min(108, width * 0.3)))
-  const rightMargin = width < 360 ? 40 : 56
+  // The old thresholds (108 cap, <360 breakpoint) barely kicked in for most
+  // real phones (~380-430px CSS width), so bars still only got ~55% of the
+  // card's width. Tighter cap + a higher breakpoint keeps bars at ~65-70%
+  // on phones while desktop (much wider) is unaffected either way.
+  const yAxisWidth = Math.round(Math.max(56, Math.min(90, width * 0.22)))
+  const rightMargin = width < 420 ? 36 : 56
   return { ref, yAxisWidth, rightMargin }
 }
 
