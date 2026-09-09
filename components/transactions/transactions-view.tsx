@@ -29,17 +29,22 @@ export function TransactionsView() {
     { value: 'all', label: 'All members' },
     ...members.map((m) => ({ value: m.id, label: m.name.split(' ')[0] })),
   ]
+  const INCOME_FILTER = '__income__'
   const categoryOptions: Option[] = [
     { value: 'all', label: 'All categories' },
+    { value: INCOME_FILTER, label: 'Income' },
     ...categories.map((c) => ({ value: c.id, label: c.name })),
   ]
 
   const filtered = useMemo(() => {
-    return transactions.filter((t) => {
-      if (member !== 'all' && t.memberId !== member) return false
-      if (category !== 'all' && t.categoryId !== category) return false
-      return true
-    })
+    return transactions
+      .filter((t) => {
+        if (member !== 'all' && t.memberId !== member) return false
+        if (category === INCOME_FILTER && t.type !== 'income') return false
+        if (category !== 'all' && category !== INCOME_FILTER && t.categoryId !== category) return false
+        return true
+      })
+      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
   }, [transactions, member, category])
 
   const monthGroups = useMemo(() => {
@@ -161,9 +166,8 @@ export function TransactionsView() {
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {monthGroups.map(({ month, items }, index) => {
-            const defaultExpanded = index === 0
-            const expanded = toggledMonths.has(month) ? !defaultExpanded : defaultExpanded
+          {monthGroups.map(({ month, items }) => {
+            const expanded = toggledMonths.has(month)
             return (
               <div key={month} className="overflow-hidden rounded-2xl border border-border bg-card">
                 <button

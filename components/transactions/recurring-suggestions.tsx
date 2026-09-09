@@ -203,6 +203,7 @@ export function RecurringSuggestions({ transactions }: { transactions: Transacti
                   value={dates[c.id] ?? ''}
                   onChange={(e) => setDates((prev) => ({ ...prev, [c.id]: e.target.value }))}
                   disabled={!isChecked}
+                  max={new Date().toISOString().slice(0, 10)}
                   className="rounded-md border border-border bg-card px-2 py-1 text-sm text-foreground disabled:opacity-50"
                 />
                 <div className="flex items-center gap-1">

@@ -22,7 +22,6 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
   const today = new Date().toISOString().slice(0, 10)
   const isEditing = !!transaction
   const monthStart = `${today.slice(0, 4)}-${today.slice(5, 7)}-01`
-  const monthEnd = new Date(Number(today.slice(0, 4)), Number(today.slice(5, 7)), 0).toISOString().slice(0, 10)
 
   const [type, setType] = useState<TransactionType>(transaction?.type ?? 'expense')
   const [amount, setAmount] = useState(transaction ? String(transaction.amount) : '')
@@ -38,7 +37,7 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
   const [error, setError] = useState('')
 
   const amountValue = Number(amount)
-  const dateInRange = isEditing || (date >= monthStart && date <= monthEnd)
+  const dateInRange = isEditing || (date >= monthStart && date <= today)
   const valid = amountValue > 0 && date && dateInRange && member && (type === 'income' ? source : categoryId)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -319,12 +318,12 @@ export function AddTransactionForm({ transaction }: { transaction?: Transaction 
             value={date}
             onChange={(e) => setDate(e.target.value)}
             min={isEditing ? undefined : monthStart}
-            max={isEditing ? undefined : monthEnd}
+            max={isEditing ? undefined : today}
             className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
             required
           />
           {!isEditing && !dateInRange && (
-            <p className="text-xs text-danger">Only dates in the current month are allowed.</p>
+            <p className="text-xs text-danger">Only today or earlier in the current month is allowed.</p>
           )}
         </div>
       </div>
