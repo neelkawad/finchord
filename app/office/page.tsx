@@ -23,7 +23,7 @@ export default function OfficePage() {
             aria-pressed={tab === 'appointments'}
             onClick={() => setTab('appointments')}
             className={cn(
-              'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+              'break-words rounded-lg px-2 py-2 text-xs font-medium leading-tight transition-colors sm:text-sm',
               tab === 'appointments' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
             )}
           >
@@ -34,7 +34,7 @@ export default function OfficePage() {
             aria-pressed={tab === 'days'}
             onClick={() => setTab('days')}
             className={cn(
-              'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+              'break-words rounded-lg px-2 py-2 text-xs font-medium leading-tight transition-colors sm:text-sm',
               tab === 'days' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
             )}
           >
@@ -45,7 +45,7 @@ export default function OfficePage() {
             aria-pressed={tab === 'documents'}
             onClick={() => setTab('documents')}
             className={cn(
-              'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+              'break-words rounded-lg px-2 py-2 text-xs font-medium leading-tight transition-colors sm:text-sm',
               tab === 'documents' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
             )}
           >

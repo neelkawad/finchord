@@ -73,7 +73,7 @@ export function OverviewSummary({
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
-      <span className="text-sm font-medium text-muted-foreground">Spent</span>
+      <span className="text-sm font-medium text-muted-foreground">Expenses</span>
       <p className={cn('mt-2 text-3xl font-semibold tracking-tight', textClass[spentStatus])}>
         {formatCurrency(totalSpent, { compact: true })}
       </p>
