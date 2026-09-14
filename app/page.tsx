@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { PageHeader } from '@/components/page-header'
 import { OverviewSummary } from '@/components/dashboard/overview-summary'
 import { SpendingBreakdown } from '@/components/dashboard/spending-breakdown'
-import { OverspendBanner } from '@/components/dashboard/overspend-banner'
 import { WatchdogWidget } from '@/components/dashboard/watchdog-widget'
 import { IosInstallBanner } from '@/components/ios-install-banner'
 import { MonthPicker } from '@/components/dashboard/month-picker'
@@ -46,8 +45,6 @@ export default function DashboardPage() {
           showSaved={showSaved}
           onToggleSaved={() => setShowSaved((v) => !v)}
         />
-
-        <OverspendBanner month={month} />
 
         <SpendingBreakdown month={month} showIncome={showIncome} showSaved={showSaved} />
       </div>
